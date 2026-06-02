@@ -36,6 +36,20 @@ OPERATOR_KEY_SHA256=<your-hash> PORT=8787 DATA_DIR=/var/lib/zerotwo node backend
 
 Requests are written to `DATA_DIR/requests.json`; rate state to `ratelimit.json`.
 
+### Env vars
+
+| Var                   | Default       | Purpose                                                        |
+|-----------------------|---------------|----------------------------------------------------------------|
+| `OPERATOR_KEY_SHA256` | sha256(zerotwo) | Operator-inbox auth; **must match the dashboard's** hash.    |
+| `PORT` / `HOST`       | 8787 / 127.0.0.1 | Listen address. Use `HOST=0.0.0.0` inside a container.       |
+| `DATA_DIR`            | ./data        | Where `requests.json` / `ratelimit.json` are persisted.        |
+| `CORS_ORIGIN`         | (none)        | Comma-separated page origins allowed to call the API from a browser. Needed only for **split hosting** (page and backend on different hosts). Empty = same-origin only. |
+
+> Behind a proxy/tunnel the backend reads the real visitor IP from
+> `CF-Connecting-IP`, then `X-Real-IP`, then `X-Forwarded-For` — so the per-IP
+> limit keys on the visitor, not the proxy. See `../DEPLOY-siteground-truenas.md`
+> for the split page-on-SiteGround / backend-on-TrueNAS walkthrough.
+
 ### Keep it running with systemd
 
 ```ini

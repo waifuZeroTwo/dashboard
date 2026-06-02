@@ -13,6 +13,21 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";       // client soft-limit timestamp
 const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
 
+/* ---------- API base ----------------------------------------------------------
+   Same-origin by default (""), so /api/* hits whatever serves this page.
+   For SPLIT hosting — static page on one host, backend on another (e.g. the page
+   on SiteGround and the Node backend on your TrueNAS box) — point it at the
+   backend by adding this to the page <head>:
+     <meta name="zerotwo-api-base" content="https://api.zerotwosystems.nl" />
+   The backend must then allow that page's origin via CORS (CORS_ORIGIN env). */
+const API_BASE = (function () {
+  try {
+    const m = document.querySelector('meta[name="zerotwo-api-base"]');
+    return ((m && m.getAttribute("content")) || "").trim().replace(/\/+$/, "");
+  } catch (e) { return ""; }
+})();
+const apiUrl = (p) => API_BASE + p;
+
 /* ---------- client soft-limit (cookie + localStorage) ---------- */
 function setCookie(name, val, ms) {
   try {
@@ -69,7 +84,7 @@ function demoResolve(id, action) {
 const api = {
   async submit(payload) {
     try {
-      const r = await fetch("/api/request", {
+      const r = await fetch(apiUrl("/api/request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -86,7 +101,7 @@ const api = {
   },
   async list(key) {
     try {
-      const r = await fetch("/api/requests", { headers: { Authorization: "Bearer " + (key || "") } });
+      const r = await fetch(apiUrl("/api/requests"), { headers: { Authorization: "Bearer " + (key || "") } });
       if (isAbsent(r.status)) return { ok: true, demo: true, requests: demoList() };
       if (r.status === 401) return { ok: false, unauth: true };
       if (!r.ok) return { ok: false };
@@ -98,7 +113,7 @@ const api = {
   },
   async resolve(key, id, action) {
     try {
-      const r = await fetch("/api/request/resolve", {
+      const r = await fetch(apiUrl("/api/request/resolve"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + (key || "") },
         body: JSON.stringify({ id, action }),
