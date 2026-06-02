@@ -15,10 +15,12 @@ interactive console, an operator lock, and a public account-request system.
 ```
 ZeroTwo Dashboard.html   ← the dashboard. This is the whole frontend. Deploy this.
 backend/                 ← optional zero-dependency Node service for the request system
-  server.js              ← enforces the REAL per-IP once-per-day limit + bot traps
-  nginx.conf.example     ← edge rate-limiting + reverse proxy to the backend
+  server.js              ← enforces the REAL per-IP once-per-day limit + bot traps (+ CORS)
+  nginx.conf.example     ← edge rate-limiting + reverse proxy (same-origin hosting)
+  nginx.truenas.conf     ← ready-to-mount nginx for the split SiteGround+TrueNAS setup
   README.md              ← backend deploy steps (systemd unit included)
 build/                   ← optional: source + tooling to regenerate the HTML (ignore for normal use)
+DEPLOY-siteground-truenas.md  ← split hosting: page on SiteGround, backend on TrueNAS
 README.md                ← this file
 ```
 
@@ -89,8 +91,19 @@ cookies/localStorage are per-browser and a bot ignores your JS entirely. The
   edge before it ever reaches Node.
 
 Deploy steps are in [`backend/README.md`](backend/README.md). Once the backend is
-live the dashboard auto-detects it and switches from demo mode to real data — no
-frontend change needed.
+live the dashboard auto-detects it and switches from demo mode to real data.
+
+### Same-origin vs split hosting
+
+- **Same origin** (page + backend on one server): no config needed — the page
+  calls a relative `/api/...` and `backend/nginx.conf.example` proxies it.
+- **Split hosting** (page on one host, backend on another — e.g. **page on
+  SiteGround, backend on TrueNAS**): set `<meta name="zerotwo-api-base">` in the
+  page `<head>` to the backend's public URL, and set the backend's `CORS_ORIGIN`
+  env to the page's origin. Full walkthrough (TrueNAS SCALE Custom App +
+  Cloudflare Tunnel + DNS) in
+  [`DEPLOY-siteground-truenas.md`](DEPLOY-siteground-truenas.md), with a
+  ready-to-mount [`backend/nginx.truenas.conf`](backend/nginx.truenas.conf).
 
 ## Things worth knowing (carried over from the design)
 

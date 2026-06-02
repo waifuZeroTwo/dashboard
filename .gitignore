@@ -1,0 +1,8 @@
+# build tooling — regenerable, never commit
+build/node_modules/
+build/compiled/
+
+# backend runtime data (request store + rate state)
+backend/data/
+data/
+*.log

@@ -43,6 +43,25 @@ const MIN_FORM_MS = 1200;           // submitted faster than this == bot
 const ALLOWED_SERVICES = ["jellyfin", "plex", "immich", "navidrome", "nextcloud"];
 const LIMITS = { username: 60, contact: 80, referral: 200, note: 500 };
 
+// CORS: comma-separated list of page origins allowed to call this API from a
+// browser. Needed only for SPLIT hosting (page and backend on different hosts,
+// e.g. page on SiteGround, this backend on TrueNAS). Empty = same-origin only,
+// no CORS headers emitted.
+//   CORS_ORIGIN="https://zerotwosystems.nl,https://zerotwosystems.com"
+const CORS_ORIGINS = (process.env.CORS_ORIGIN || "")
+  .split(",").map((s) => s.trim()).filter(Boolean);
+function corsHeaders(req) {
+  const origin = req.headers["origin"];
+  if (!origin || !CORS_ORIGINS.includes(origin)) return {};
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Vary": "Origin",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
 // ---- storage (flat JSON files, atomic writes) ------------------------------
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const REQ_FILE = path.join(DATA_DIR, "requests.json");
@@ -73,7 +92,13 @@ setInterval(pruneRate, 60 * 60 * 1000).unref();
 
 // ---- helpers ---------------------------------------------------------------
 function clientIP(req) {
-  const xr = req.headers["x-real-ip"];
+  // Behind a tunnel/proxy the real visitor IP is in a forwarded header, NOT the
+  // socket. Without this the per-IP/day limit would see every visitor as the
+  // tunnel and collapse to a single shared bucket. Trust these only because the
+  // backend is reachable solely through your proxy (don't also expose :8787).
+  const cf = req.headers["cf-connecting-ip"];      // Cloudflare Tunnel / proxy
+  if (cf) return String(cf).trim();
+  const xr = req.headers["x-real-ip"];             // nginx proxy_set_header
   if (xr) return String(xr).trim();
   const xf = req.headers["x-forwarded-for"];
   if (xf) return String(xf).split(",")[0].trim();
@@ -188,6 +213,11 @@ async function handleResolve(req, res) {
 
 // ---- router ----------------------------------------------------------------
 const server = http.createServer((req, res) => {
+  // CORS for split static-page + remote-backend hosting (no-op when CORS_ORIGIN unset).
+  // setHeader values survive the writeHead() in send() — they use different header names.
+  for (const [k, v] of Object.entries(corsHeaders(req))) res.setHeader(k, v);
+  if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
+
   const url = (req.url || "").split("?")[0];
   if (req.method === "POST" && url === "/api/request") return handleSubmit(req, res);
   if (req.method === "GET" && url === "/api/requests") return handleList(req, res);
