@@ -13,7 +13,7 @@ interactive console, an operator lock, and a public account-request system.
 ## Files
 
 ```
-ZeroTwo Dashboard.html   ← the dashboard. This is the whole frontend. Deploy this.
+index.html               ← the dashboard. This is the whole frontend. Deploy this.
 backend/                 ← optional zero-dependency Node service for the request system
   server.js              ← enforces the REAL per-IP once-per-day limit + bot traps (+ CORS)
   nginx.conf.example     ← edge rate-limiting + reverse proxy (same-origin hosting)
@@ -27,8 +27,8 @@ README.md                ← this file
 ## Quick start (frontend only)
 
 ```sh
-# copy the dashboard into your nginx web root and (optionally) make it the index
-cp "ZeroTwo Dashboard.html" /var/www/zerotwo/index.html
+# copy the dashboard into your nginx web root
+cp index.html /var/www/zerotwo/index.html
 ```
 
 ```nginx
@@ -36,7 +36,7 @@ server {
     listen 443 ssl http2;
     server_name zerotwosystems.com;
     root  /var/www/zerotwo;
-    index index.html;            # the renamed ZeroTwo Dashboard.html
+    index index.html;            # serves the dashboard
     location / { try_files $uri $uri/ =404; }
 }
 ```

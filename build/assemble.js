@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = __dirname;
-const OUT = path.join(ROOT, "..", "ZeroTwo Dashboard.html");
+const OUT = path.join(ROOT, "..", "index.html");
 
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
@@ -59,8 +59,8 @@ parts.push('       backend\'s public base URL, e.g. content="https://api.zerotwo
 parts.push("       empty when the same server serves both this page and /api/. -->");
 parts.push('  <meta name="zerotwo-api-base" content="" />');
 parts.push("");
-parts.push("  <!-- Single self-contained build. Drop this file into your nginx web root");
-parts.push("       (optionally rename to index.html). The request system's per-IP/day limit");
+parts.push("  <!-- Single self-contained build. Drop index.html into your nginx web root.");
+parts.push("       The request system's per-IP/day limit");
 parts.push("       is enforced by backend/ (see README.md); without it the request panel runs");
 parts.push("       in a clearly-labelled demo mode. -->");
 parts.push("");

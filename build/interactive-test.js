@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { JSDOM, VirtualConsole } = require("jsdom");
 
-const html = fs.readFileSync(path.join(__dirname, "..", "ZeroTwo Dashboard.html"), "utf8");
+const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const errors = [];
 const vc = new VirtualConsole();
 vc.on("jsdomError", (e) => errors.push(String((e && (e.detail && e.detail.stack)) || (e && e.message) || e)));

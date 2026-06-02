@@ -1,9 +1,9 @@
-# build/ — regenerate `ZeroTwo Dashboard.html`
+# build/ — regenerate `index.html`
 
 You only need this folder if you want to **edit the dashboard's source** and
 rebuild the single-file output. For day-to-day use you can ignore it — tiles,
 logos, and the operator passphrase are all editable in-page, and the shipped
-`../ZeroTwo Dashboard.html` already contains everything.
+`../index.html` already contains everything.
 
 ## What it does
 
@@ -18,7 +18,7 @@ in-browser transpilation** — it just runs.
 ```sh
 cd build
 npm install          # React + Babel + jsdom (one time)
-npm run build        # -> writes ../ZeroTwo Dashboard.html
+npm run build        # -> writes ../index.html
 npm test             # headless jsdom checks: mount, auth gate, console, requests
 npm run rebuild      # build + test
 ```
