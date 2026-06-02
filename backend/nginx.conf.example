@@ -18,7 +18,7 @@ server {
     # ssl_certificate_key /etc/letsencrypt/live/zerotwosystems.com/privkey.pem;
 
     root /var/www/zerotwo;                    # <-- folder holding the dashboard
-    index "ZeroTwo Dashboard.html";
+    index index.html;
 
     # global soft cap on concurrent connections per IP
     limit_conn conns 20;

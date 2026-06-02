@@ -37,8 +37,8 @@ ships with two things wired up for you:
 
 ## Part A — SiteGround (the page)
 
-1. **Upload** `ZeroTwo Dashboard.html` to your site root (`public_html`) via Site
-   Tools → File Manager (or SFTP), and rename it to **`index.html`**.
+1. **Upload** `index.html` to your site root (`public_html`) via Site
+   Tools → File Manager (or SFTP).
 2. **Point it at your backend.** Edit the `<head>` and set the api-base meta tag
    to the public API URL you'll create in Part C/D:
    ```html

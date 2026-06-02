@@ -2,7 +2,7 @@
   "name": "zerotwo-build",
   "version": "1.0.0",
   "private": true,
-  "description": "Compiles the ZeroTwo dashboard sources into the single self-contained ../ZeroTwo Dashboard.html",
+  "description": "Compiles the ZeroTwo dashboard sources into the single self-contained ../index.html",
   "scripts": {
     "build": "babel src --out-dir compiled --presets @babel/preset-react --extensions .jsx && node assemble.js",
     "test": "node smoke-test.js && node interactive-test.js",
