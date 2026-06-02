@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(curl -sS -w \"\\\\n[HTTP %{http_code}]\\\\n\" \"https://api.anthropic.com/v1/design/h/Te8m1iRLXLFlQZJhjA9uHg?open_file=ZeroTwo+Dashboard.html\")",
+      "Bash(env)",
+      "Bash(cp webfetch-1780383730821-82c0hu.bin design.gz)",
+      "Bash(gunzip -kf design.gz)",
+      "Bash(xxd design *)",
+      "Bash(tar -tf design)",
+      "Bash(mkdir -p \"/c/Users/ZeroTsu/Downloads/claude/_design_src\")",
+      "Bash(tar -xf design -C \"/c/Users/ZeroTsu/Downloads/claude/_design_src\")",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Read(//c/c/Users/ZeroTsu/Downloads/claude/**)",
+      "Read(//c/c/Users/ZeroTsu/Downloads/claude/.build/**)",
+      "Bash(npm --version)",
+      "Bash(echo \"exit=$?\")",
+      "PowerShell(Write-Output \"npm: $\\(\\(Get-Command npm -ErrorAction SilentlyContinue\\).Source\\)\"; npm --version; Write-Output \"node: $\\(\\(Get-Command node\\).Source\\)\")",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\ZeroTsu\\\\Downloads\\\\claude\\\\.build\"; npx babel src --out-dir compiled --presets \"@babel/preset-react\" --extensions \".jsx\"; Write-Output \"--- exit: $LASTEXITCODE ---\"; Get-ChildItem compiled | Select-Object Name,Length)"
+    ]
+  }
+}
