@@ -17,7 +17,12 @@
       "Bash(npm --version)",
       "Bash(echo \"exit=$?\")",
       "PowerShell(Write-Output \"npm: $\\(\\(Get-Command npm -ErrorAction SilentlyContinue\\).Source\\)\"; npm --version; Write-Output \"node: $\\(\\(Get-Command node\\).Source\\)\")",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\ZeroTsu\\\\Downloads\\\\claude\\\\.build\"; npx babel src --out-dir compiled --presets \"@babel/preset-react\" --extensions \".jsx\"; Write-Output \"--- exit: $LASTEXITCODE ---\"; Get-ChildItem compiled | Select-Object Name,Length)"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\ZeroTsu\\\\Downloads\\\\claude\\\\.build\"; npx babel src --out-dir compiled --presets \"@babel/preset-react\" --extensions \".jsx\"; Write-Output \"--- exit: $LASTEXITCODE ---\"; Get-ChildItem compiled | Select-Object Name,Length)",
+      "Bash(cp webfetch-1780501493861-5kdxka.bin d2.gz)",
+      "Bash(gunzip -f d2.gz)",
+      "Bash(mkdir -p \"/c/Users/ZeroTsu/Downloads/claude/_design_v2\")",
+      "Bash(tar -xf d2 -C \"/c/Users/ZeroTsu/Downloads/claude/_design_v2\")",
+      "Bash(tar -tf d2)"
     ]
   }
 }

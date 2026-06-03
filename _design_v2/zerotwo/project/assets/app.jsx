@@ -14,7 +14,7 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
    the printed hash here. The plaintext is never stored in this file.
    NOTE: a static page can only DETER tampering. For real enforcement put the
    page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
-const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
+const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
 
 const TITLE_CYCLE = [
   "HomeLab Nexus",
@@ -252,11 +252,11 @@ function App() {
       <div className="topbar">
         <span className="brand">ZEROTWO<b>://</b>NEXUS</span>
         <span className="sep">│</span>
-        <span className="stat"><span className="v">{fmtDate(now)}</span></span>
-        <span className="sep">│</span>
-        <span className="stat"><span className="v">{fmtClock(now)}</span></span>
+        <span className="stat t-date"><span className="v">{fmtDate(now)}</span></span>
+        <span className="sep t-sep-clock">│</span>
+        <span className="stat t-clock"><span className="v">{fmtClock(now)}</span></span>
         <span className="spacer"></span>
-        <span className="stat">● <span className="v">{onlineCount}/{tracked}</span> NODES ONLINE</span>
+        <span className="stat t-nodes">● <span className="v">{onlineCount}/{tracked}</span> NODES ONLINE</span>
         <button className="btn req-cta" onClick={() => setReqOpen(true)}>request access</button>
         <span
           className={"lock" + (unlocked ? " open" : "")}
