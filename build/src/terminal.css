@@ -1008,3 +1008,143 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
   .tile:hover { transform: none; }
   .tile .name .caret { opacity: 1; transform: none; }
 }
+
+/* ============================================================
+   // PERSONAL — zerotwolove.nl featured strip
+   A warm side-project banner. A single pink accent that only
+   blooms on hover, so it never competes with the green nexus.
+   ============================================================ */
+:root {
+  --pink:      #ff6fa5;
+  --pink-hi:   #ff9ec6;
+  --pink-line: rgba(255, 111, 165, 0.42);
+  --pink-soft: rgba(255, 111, 165, 0.16);
+  --pink-glow: 0 0 14px rgba(255, 111, 165, 0.30);
+}
+
+.promo-banner {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--pink-line);
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+.promo-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 140% at 0% 50%, var(--pink-soft), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+.promo-banner:hover {
+  border-color: var(--pink-line);
+  box-shadow: var(--pink-glow);
+  transform: translateY(-2px);
+}
+.promo-banner:hover::before { opacity: 1; }
+
+/* image slot (drop / click a Zero Two pic — operator only) */
+.promo-banner .shot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 138px;
+  align-self: stretch;
+  min-height: 118px;
+  border: 1px solid var(--line);
+  background: #060a08;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.promo-banner .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.promo-banner .shot-ph {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+  pointer-events: none;
+}
+.promo-banner .shot.editable { cursor: pointer; }
+.promo-banner .shot-dz {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  background: rgba(255, 111, 165, 0.92);
+  opacity: 0;
+  text-align: center;
+}
+.promo-banner .shot.dragover { border-color: var(--pink); box-shadow: var(--pink-glow); }
+.promo-banner .shot.dragover .shot-dz { opacity: 1; }
+
+.promo-banner .b-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+.promo-banner .b-cmd {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  margin-bottom: 1px;
+}
+.promo-banner .b-cmd .p { color: var(--green); text-shadow: var(--glow); }
+.promo-banner .b-title {
+  color: var(--green-hi);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: color 0.18s ease;
+}
+.promo-banner .b-title .hb {
+  font-size: 14px;
+  color: var(--pink);
+  text-shadow: 0 0 9px rgba(255, 111, 165, 0.6);
+}
+.promo-banner:hover .b-title { color: var(--pink-hi); }
+.promo-banner .b-tag {
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 50ch;
+}
+.promo-banner .b-cta {
+  margin-top: 3px;
+  color: var(--pink);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.promo-banner:hover .b-cta { opacity: 1; transform: translateX(3px); }
+
+@media (max-width: 600px) {
+  .promo-banner { gap: 14px; padding: 14px; }
+  .promo-banner .shot { width: 96px; min-height: 96px; }
+  .promo-banner .b-title { font-size: 18px; }
+}
+
+/* ---- terminal easter-egg: the `zerotwo` payoff ---- */
+.zt-heart { color: var(--pink); text-shadow: 0 0 9px rgba(255, 111, 165, 0.5); }
+.zt-hi { color: var(--pink-hi); }
+.term-link.zt-link, .zt-link { color: var(--pink); text-decoration: underline; cursor: pointer; }
+.term-link.zt-link:hover, .zt-link:hover { color: var(--pink-hi); }
