@@ -7,9 +7,9 @@
 
   <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this
        page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the
-       backend's public base URL, e.g. content="https://api.zerotwosystems.nl". Leave
+       backend's public base URL, e.g. content="https://api.zerotwosystems.com". Leave
        empty when the same server serves both this page and /api/. -->
-    <meta name="zerotwo-api-base" content="https://api.zerotwosystems.nl" />
+  <meta name="zerotwo-api-base" content="https://api.zerotwosystems.com"/>
 
   <!-- Single self-contained build. Drop index.html into your nginx web root.
        The request system's per-IP/day limit
@@ -1815,7 +1815,7 @@ const {
   useRef,
   useCallback
 } = React;
-const REQ_SERVICES = ["jellyfin", "plex", "immich", "navidrome", "nextcloud"];
+const REQ_SERVICES = ["jellyfin", navidrome"plex", "immich", "", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1"; // client soft-limit timestamp
 const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
@@ -2794,7 +2794,7 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
    the printed hash here. The plaintext is never stored in this file.
    NOTE: a static page can only DETER tampering. For real enforcement put the
    page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
-const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
+const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
 const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽"];
 
 /* ---- seed services (from operator config) ---- */
@@ -2811,14 +2811,14 @@ const SEED = [{
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "http://192.168.1.83:30013/web/#/home"
+  url: "https://fin.zerotwosystems.com"
 }, {
   id: "navidrome",
   name: "Navidrome",
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "http://192.168.1.83:30043/app/#/album/recentlyAdded?sort=recently_added&order=DESC&filter=%7B%7D"
+  url: "https://music.zerotwosystems.com"
 }, {
   id: "immich",
   name: "Immich",
@@ -2853,7 +2853,7 @@ const SEED = [{
   category: "NETWORK & AUTOMATION",
   statusMode: "auto",
   icon: "",
-  url: "https://192.168.1.83:30103/onboarding.html"
+  url: "https://home.zerotwosystems.com/"
 }];
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 function load() {
