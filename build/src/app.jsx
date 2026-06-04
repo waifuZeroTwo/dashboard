@@ -34,9 +34,9 @@ const SEED = [
   { id: "plex",      name: "Plex",          category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1" },
   { id: "jellyfin",  name: "Jellyfin",      category: "MEDIA",  statusMode: "auto", icon: "",
-    url: "http://192.168.1.83:30013/web/#/home" },
+    url: "https://fin.zerotwosystems.com/" },
   { id: "navidrome", name: "Navidrome",     category: "MEDIA",  statusMode: "auto", icon: "",
-    url: "http://192.168.1.83:30043/app/#/album/recentlyAdded?sort=recently_added&order=DESC&filter=%7B%7D" },
+    url: "https://music.zerotwosystems.com/" },
   { id: "immich",    name: "Immich",        category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://photos.zerotwosystems.com/" },
   { id: "truenas",   name: "TrueNAS",       category: "STORAGE & CLOUD", statusMode: "auto", icon: "",
@@ -46,7 +46,7 @@ const SEED = [
   { id: "porttracker", name: "Porttracker", category: "NETWORK & AUTOMATION", statusMode: "auto", icon: "",
     url: "http://192.168.1.83:30233/?server=local" },
   { id: "homeassistant", name: "Home Assistant", category: "NETWORK & AUTOMATION", statusMode: "auto", icon: "",
-    url: "https://192.168.1.83:30103/onboarding.html" },
+    url: "https://home.zerotwosystems.com/" },
 ];
 
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];

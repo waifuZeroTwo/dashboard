@@ -251,7 +251,7 @@ function EditModal({ initial, categories, onSave, onClose }) {
           </div>
           <div className="field">
             <label>url</label>
-            <input value={f.url} onChange={(e) => set("url", e.target.value)} placeholder="http://192.168.1.83:30013/" />
+            <input value={f.url} onChange={(e) => set("url", e.target.value)} placeholder="https://fin.zerotwosystems.com/" />
           </div>
           <div className="field">
             <label>category</label>
