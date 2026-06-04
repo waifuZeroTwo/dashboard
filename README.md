@@ -1,125 +1,181 @@
-# ZeroTwo Systems — HomeLab Nexus
+# ZeroTwo Systems HomeLab Nexus
 
-A self-hosted **start page / service dashboard** with a CRT-phosphor terminal
-aesthetic (green-on-black, JetBrains Mono, scanlines). One central spot that
-links out to all your services, with live status, an in-page editor, an
-interactive console, an operator lock, and a public account-request system.
+ZeroTwo Systems HomeLab Nexus is a public-ready start page for self-hosted services. It gives your home lab, media server, personal cloud, or small community a polished landing page with service links, live status, search, a terminal-inspired interface, and an optional account request flow.
 
-> Implemented from a Claude Design handoff bundle as a **single self-contained
-> HTML file** — no build step, no CDN JavaScript, no in-browser transpilation.
-> React (production build), the compiled UI, and the CSS are all inlined. Drop
-> the one file into your web root and you're done.
+The dashboard is designed to be easy to publish. The frontend ships as a single `index.html` file, so you can place it on almost any static web host, reverse proxy, NAS, VPS, or traditional web server. If you want real account request enforcement, the optional Node backend adds rate limiting, bot traps, and an operator inbox.
 
-## Files
+## Highlights
 
+- Public-facing service directory for Jellyfin, Plex, Nextcloud, Immich, Navidrome, TrueNAS, Home Assistant, network tools, and more.
+- Terminal-inspired CRT visual style with green-on-black colors, scanlines, and JetBrains Mono typography.
+- Search-first navigation with keyboard shortcuts for fast access to services.
+- Service cards grouped by category with status indicators and custom logo support.
+- In-page editor for adding, updating, hiding, or removing services without editing HTML by hand.
+- Operator lock for admin-only actions such as editing, terminal commands, logo drops, reset controls, and the request inbox.
+- Optional account request panel where visitors can request access to selected services.
+- Optional backend for real per-IP request limits, bot protection, CORS support, and an authenticated inbox.
+- No frontend build step required for normal deployment.
+
+## Screens and experience
+
+The page presents visitors with a simple service portal while still giving operators powerful controls behind a lock.
+
+Visitors can:
+
+- Browse service cards by category.
+- Search services from the keyboard.
+- Open public service links.
+- Submit an account request if the request system is enabled.
+
+Operators can:
+
+- Unlock the console with a passphrase.
+- Add, edit, delete, and reorder service entries.
+- Drop in custom service logos.
+- Review, approve, deny, or delete account requests.
+- Use console commands such as `ls`, `open`, `status`, `search`, `add`, `edit`, `rm`, `requests`, `passwd`, `lock`, and `help`.
+
+## Repository contents
+
+```text
+index.html                         Main dashboard file for deployment
+backend/                           Optional Node backend for account requests
+backend/server.js                  Request API with rate limits, bot traps, and operator auth
+backend/nginx.conf.example         Example nginx reverse proxy and edge rate limits
+backend/nginx.truenas.conf         nginx config for a split SiteGround and TrueNAS setup
+backend/README.md                  Backend setup and operations guide
+build/                             Optional source and tooling used to regenerate index.html
+DEPLOY-siteground-truenas.md       Split-hosting guide for SiteGround, TrueNAS, Cloudflare, and DNS
+README.md                          Project overview
 ```
-index.html               ← the dashboard. This is the whole frontend. Deploy this.
-backend/                 ← optional zero-dependency Node service for the request system
-  server.js              ← enforces the REAL per-IP once-per-day limit + bot traps (+ CORS)
-  nginx.conf.example     ← edge rate-limiting + reverse proxy (same-origin hosting)
-  nginx.truenas.conf     ← ready-to-mount nginx for the split SiteGround+TrueNAS setup
-  README.md              ← backend deploy steps (systemd unit included)
-build/                   ← optional: source + tooling to regenerate the HTML (ignore for normal use)
-DEPLOY-siteground-truenas.md  ← split hosting: page on SiteGround, backend on TrueNAS
-README.md                ← this file
-```
 
-## Quick start (frontend only)
+## Quick start
+
+### Static dashboard only
+
+Use this option if you only need a public service directory and do not need real server-side account request enforcement.
 
 ```sh
-# copy the dashboard into your nginx web root
 cp index.html /var/www/zerotwo/index.html
 ```
+
+Example nginx site:
 
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name zerotwosystems.com;
-    root  /var/www/zerotwo;
-    index index.html;            # serves the dashboard
-    location / { try_files $uri $uri/ =404; }
+    server_name example.com;
+    root /var/www/zerotwo;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
 }
 ```
 
-That alone gives you the full dashboard. The request panel runs in a clearly
-labelled **demo mode** (localStorage) until you deploy the backend below.
+With only the static frontend deployed, the account request panel runs in demo mode using browser storage. This is useful for previewing the interface, but it is not a secure or enforceable request system.
 
-## Features
+### Dashboard with real account requests
 
-- **Cycling multilingual title** — `ZeroTwo Systems` with the subtitle
-  typewriter-cycling `HomeLab Nexus → होमलैब नेक्सस → ホームラボ・ネクサス → 家庭实验室枢纽`.
-- **Live clock, time-aware greeting, and an `N/8 NODES ONLINE` counter.**
-- **Service tiles** grouped into MEDIA / STORAGE & CLOUD / NETWORK & AUTOMATION,
-  each with a status dot and a drop-in logo placeholder (drag an image onto it).
-- **Search** — press `/` to focus; Enter opens the top matching service or falls
-  back to a Google search.
-- **NEXUS-SH console** — press `` ` `` (backtick) or the **TERMINAL** button.
-  Commands: `ls`, `open <#|name>`, `status`, `search`, `add`/`edit`/`rm`,
-  `neofetch`, `passwd`, `lock`, `requests`, `help`, plus tab-completion and
-  `↑/↓` history.
-- **In-page editor** — **EDIT** mode adds/edits/deletes tiles; everything
-  persists to your browser's localStorage.
-- **Operator lock** — the console, editing, logo drops, reset, and the request
-  inbox are gated behind an operator passphrase (SHA-256 hashed, never stored in
-  plaintext). Links, search, and status stay public.
-- **Account requests** — a public slide-over where visitors request an account
-  on a service (Jellyfin/Plex/Immich/Navidrome/Nextcloud), one per day, with an
-  operator-only inbox to approve/deny/delete.
+Use the optional backend when you want public visitors to submit account requests safely.
+
+1. Deploy `index.html` to your web root or static host.
+2. Deploy the Node backend from `backend/`.
+3. Put nginx, Caddy, Cloudflare Tunnel, or another reverse proxy in front of the backend.
+4. Set the operator hash in both the frontend build configuration and backend environment.
+5. Configure CORS only if the frontend and backend are on different origins.
+
+Detailed backend instructions are available in [`backend/README.md`](backend/README.md). A complete split-hosting walkthrough is available in [`DEPLOY-siteground-truenas.md`](DEPLOY-siteground-truenas.md).
+
+## Account request system
+
+A static page cannot reliably enforce one request per day, block automated submissions, or protect an operator inbox. Browser storage can be cleared, JavaScript can be bypassed, and bots do not have to follow client-side rules.
+
+For real enforcement, use the backend. It provides:
+
+- One request per IP address per rolling 24-hour window.
+- Honeypot and minimum form-time bot checks.
+- Request body size limits.
+- Pending and total request caps to protect disk usage.
+- Atomic file writes.
+- Operator-only endpoints protected by the configured SHA-256 passphrase hash.
+- CORS controls for split hosting.
 
 ## Operator passphrase
 
-The default passphrase is **`zerotwo`** — change it.
+The default operator passphrase is `zerotwo`. Change it before publishing the dashboard.
 
-1. Open the console (it will prompt to unlock), run `passwd your new phrase`.
-2. Paste the printed hash over `OPERATOR_KEY_SHA256` in `build/src/app.jsx`,
-   then `cd build && npm run build` to regenerate the HTML.
-3. Set the **same** hash as the backend's `OPERATOR_KEY_SHA256` env var so the
-   inbox authenticates. Only the hash is ever stored.
+1. Open the dashboard console and unlock it with the current passphrase.
+2. Run `passwd your new phrase`.
+3. Copy the printed SHA-256 hash.
+4. Replace `OPERATOR_KEY_SHA256` in `build/src/app.jsx` with the new hash.
+5. Run the build from the `build/` directory to regenerate `index.html`.
+6. Set the same hash as the backend `OPERATOR_KEY_SHA256` environment variable if you use the backend.
 
-## The account-request system (real enforcement)
+Only the hash should be stored. Do not publish or commit your real passphrase.
 
-A static page **cannot** truly rate-limit by IP or stop a bot — client-side
-cookies/localStorage are per-browser and a bot ignores your JS entirely. The
-"one request per day, can't be botted, can't crash the site" guarantee lives in
-`backend/` + nginx:
+## Hosting options
 
-- **`backend/server.js`** — one request per IP per rolling 24h, honeypot +
-  minimum-form-time bot traps, 4 KB body cap, max-pending/total caps so the disk
-  can't be filled, atomic writes. Operator endpoints are authed by the same
-  SHA-256 key.
-- **`backend/nginx.conf.example`** — `limit_req` zones that absorb a flood at the
-  edge before it ever reaches Node.
+### Same-origin hosting
 
-Deploy steps are in [`backend/README.md`](backend/README.md). Once the backend is
-live the dashboard auto-detects it and switches from demo mode to real data.
+Host the dashboard and backend on the same domain. The frontend can call relative `/api/...` paths, and the example nginx config can proxy requests to the Node service.
 
-### Same-origin vs split hosting
+### Split hosting
 
-- **Same origin** (page + backend on one server): no config needed — the page
-  calls a relative `/api/...` and `backend/nginx.conf.example` proxies it.
-- **Split hosting** (page on one host, backend on another — e.g. **page on
-  SiteGround, backend on TrueNAS**): set `<meta name="zerotwo-api-base">` in the
-  page `<head>` to the backend's public URL, and set the backend's `CORS_ORIGIN`
-  env to the page's origin. Full walkthrough (TrueNAS SCALE Custom App +
-  Cloudflare Tunnel + DNS) in
-  [`DEPLOY-siteground-truenas.md`](DEPLOY-siteground-truenas.md), with a
-  ready-to-mount [`backend/nginx.truenas.conf`](backend/nginx.truenas.conf).
+Host the dashboard on one provider and the backend somewhere else. For example, the static page can live on SiteGround while the backend runs on TrueNAS behind Cloudflare Tunnel.
 
-## Things worth knowing (carried over from the design)
+For this setup:
 
-- **The in-page lock is a deterrent, not real security.** Because the page is
-  served statically, a technical visitor can read the source or bypass the JS
-  gate. It reliably stops *casual* visitors from poking the console or editing
-  your board. For hard enforcement, put the page (or just `/api/`) behind nginx
-  auth — see the commented `auth_basic` block in `nginx.conf.example`. Your
-  actual services stay protected by their own logins / your VPN regardless.
-- **Status dots are browser-side.** A tile shows "up" only if *your* browser can
-  reach it, so LAN-IP services (TrueNAS, Jellyfin, …) read as down unless you're
-  on the VPN/LAN. Serving the page over HTTPS also blocks pinging `http://` LAN
-  services (mixed content). Use a tile's **force up / hide** status override in
-  the editor for anything you don't want auto-pinged.
-- **Dropped logos are stored per-browser** (localStorage), not in the file —
-  clearing site data resets them. To make logos permanent/shared, bake the
-  images into the page and set each service's `icon`.
-- **Fonts** load from Google Fonts. To run fully offline, self-host the
-  JetBrains Mono / Noto families and swap the `<link>` in the HTML `<head>`.
+- Set `<meta name="zerotwo-api-base">` in the page head to the backend public URL.
+- Set the backend `CORS_ORIGIN` value to the frontend origin.
+- Follow the guide in [`DEPLOY-siteground-truenas.md`](DEPLOY-siteground-truenas.md).
+
+## Customization
+
+You can tailor the dashboard to match your own home lab or public service portal.
+
+Common changes include:
+
+- Rename the title and subtitle.
+- Replace the default service list.
+- Add or remove service categories.
+- Upload custom logos from the editor.
+- Force status indicators on or off for services that cannot be checked from a browser.
+- Adjust fonts, colors, and scanline effects in the HTML or source files.
+- Rebuild from `build/` if you prefer source-based changes instead of editing the generated HTML.
+
+## Important security notes
+
+- The operator lock protects the dashboard interface from casual visitors, but it is not a substitute for server-side access control.
+- Static frontend code can always be inspected by visitors.
+- Protect private services with their own authentication, VPN access, SSO, reverse proxy auth, or network rules.
+- Use the backend and reverse proxy rate limits for real account request protection.
+- Status checks run from the visitor's browser. A service may appear offline if the visitor is not on your LAN or VPN.
+- Browsers may block checks to insecure `http://` services when the dashboard is served over HTTPS.
+- Dropped logos are stored in browser storage unless you bake them into the page.
+
+## Development
+
+The deployed frontend is `index.html`. The optional source project lives in `build/` for maintainers who want to regenerate the bundled page.
+
+```sh
+cd build
+npm install
+npm run build
+```
+
+The backend can be run separately from `backend/`. See [`backend/README.md`](backend/README.md) for environment variables, systemd setup, nginx examples, and operational notes.
+
+## Who this is for
+
+HomeLab Nexus is a good fit for:
+
+- Home lab owners who want one polished entry point for services.
+- Families or small groups sharing self-hosted media and cloud tools.
+- Operators who want a public landing page with private admin controls.
+- NAS, VPS, and reverse proxy setups that benefit from a lightweight static frontend.
+
+## License
+
+Add your project license here before distributing this repository publicly.
