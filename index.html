@@ -7,9 +7,9 @@
 
   <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this
        page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the
-       backend's public base URL, e.g. content="https://api.zerotwosystems.nl". Leave
+       backend's public base URL, e.g. content="https://api.zerotwosystems.com". Leave
        empty when the same server serves both this page and /api/. -->
-  <meta name="zerotwo-api-base" content="" />
+  <meta name="zerotwo-api-base" content="https://api.zerotwosystems.com" />
 
   <!-- Single self-contained build. Drop index.html into your nginx web root.
        The request system's per-IP/day limit
@@ -1592,7 +1592,7 @@ function readImageFile(file, cb) {
    To bake in a permanent image instead, drop a file in assets/
    and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
    ============================================================ */
-const DARLING_IMG = ""; // optional permanent image path
+const DARLING_IMG = "_design_v2/zerotwo/project/assets/ZeroTwo.jpg"; // optional permanent image path
 const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
 function DarlingBanner({
   unlocked,
@@ -3086,7 +3086,18 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
    NOTE: a static page can only DETER tampering. For real enforcement put the
    page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
 const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
-const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽"];
+    const TITLE_CYCLE = [
+        "HomeLab Nexus",
+        "होमलैब नेक्सस",
+        "ホームラボ・ネクサス",
+        "家庭实验室枢纽",
+        "محور المختبر المنزلي",
+        "Узел домашней лаборатории",
+        "홈랩 넥서스",
+        "ศูนย์กลางโฮมแล็บ",
+        "Kitovu cha Maabara ya Nyumbani",
+        "Kotilaboratorion Solmukohta",
+    ];
 
 /* ---- seed services (from operator config) ---- */
 const SEED = [{
@@ -3102,14 +3113,14 @@ const SEED = [{
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "http://192.168.1.83:30013/web/#/home"
+  url: "https://fin.zerotwosystems.com/"
 }, {
   id: "navidrome",
   name: "Navidrome",
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "http://192.168.1.83:30043/app/#/album/recentlyAdded?sort=recently_added&order=DESC&filter=%7B%7D"
+  url: "https://music.zerotwosystems.com/"
 }, {
   id: "immich",
   name: "Immich",
@@ -3144,7 +3155,7 @@ const SEED = [{
   category: "NETWORK & AUTOMATION",
   statusMode: "auto",
   icon: "",
-  url: "https://192.168.1.83:30103/onboarding.html"
+  url: "https://home.zerotwosystems.com/"
 }];
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 function load() {

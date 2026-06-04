@@ -22,7 +22,26 @@
       "Bash(gunzip -f d2.gz)",
       "Bash(mkdir -p \"/c/Users/ZeroTsu/Downloads/claude/_design_v2\")",
       "Bash(tar -xf d2 -C \"/c/Users/ZeroTsu/Downloads/claude/_design_v2\")",
-      "Bash(tar -tf d2)"
+      "Bash(tar -tf d2)",
+      "Bash(xxd webfetch-1780563812208-orp3ny.bin)",
+      "Bash(gzip -dc webfetch-1780563812208-orp3ny.bin)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(file design-decompressed.out)",
+      "Bash(rm -rf design-extract)",
+      "Bash(mkdir -p design-extract)",
+      "Bash(tar -xf design-decompressed.out -C design-extract)",
+      "Bash(wc -l \"project/ZeroTwo Dashboard.html\" project/assets/*.jsx project/assets/*.js project/assets/*.css)",
+      "Bash(wc -l \"C:\\\\Users\\\\ZeroTsu\\\\Downloads\\\\claude\\\\index.html\")",
+      "Bash(DESIGN=\"/c/Users/ZeroTsu/.claude/projects/C--Users-ZeroTsu-Downloads-claude/856ee28d-7989-48aa-869b-52fce0bfac32/tool-results/design-extract/zerotwo/project/assets\" *)",
+      "Bash(npm run *)",
+      "Bash(node probe-personal.js)",
+      "Bash(cp index.html /tmp/real-index.html)",
+      "Bash(node build/interactive-test.js)",
+      "Bash(cp /tmp/real-index.html index.html)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "PowerShell($gh = Get-Command gh -ErrorAction SilentlyContinue; if \\($gh\\) { Write-Output \"gh found: $\\($gh.Source\\)\"; gh auth status } else { Write-Output \"gh NOT found on PowerShell PATH\" })"
     ]
   }
 }

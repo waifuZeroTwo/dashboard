@@ -17,10 +17,16 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
 const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
 
 const TITLE_CYCLE = [
-  "HomeLab Nexus",
-  "होमलैब नेक्सस",
-  "ホームラボ・ネクサス",
-  "家庭实验室枢纽",
+    "HomeLab Nexus",
+    "होमलैब नेक्सस",
+    "ホームラボ・ネクサス",
+    "家庭实验室枢纽",
+    "محور المختبر المنزلي",
+    "Узел домашней лаборатории",
+    "홈랩 넥서스",
+    "ศูนย์กลางโฮมแล็บ",
+    "Kitovu cha Maabara ya Nyumbani",
+    "Kotilaboratorion Solmukohta",
 ];
 
 /* ---- seed services (from operator config) ---- */
