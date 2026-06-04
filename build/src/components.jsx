@@ -27,6 +27,77 @@ function readImageFile(file, cb) {
 }
 
 /* ============================================================
+   // PERSONAL — zerotwolove.nl featured strip
+   A warm plug for the side project. Drop (or click) a Zero Two
+   pic onto the slot to set it — saved locally, operator only.
+   To bake in a permanent image instead, drop a file in assets/
+   and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
+   ============================================================ */
+const DARLING_IMG = "";                 // optional permanent image path
+const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
+
+function DarlingBanner({ unlocked, newTab }) {
+  const [img, setImg] = useState(() => { try { return localStorage.getItem(DARLING_IMG_KEY) || ""; } catch (e) { return ""; } });
+  const [drag, setDrag] = useState(false);
+  const fileRef = useRef(null);
+  const src = img || DARLING_IMG;
+
+  const setImage = (data) => {
+    setImg(data);
+    try { data ? localStorage.setItem(DARLING_IMG_KEY, data) : localStorage.removeItem(DARLING_IMG_KEY); } catch (e) {}
+  };
+  const onDrop = (e) => {
+    e.preventDefault(); e.stopPropagation(); setDrag(false);
+    if (!unlocked) return;
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) readImageFile(f, setImage);
+  };
+  const onShotClick = (e) => {
+    if (!unlocked) return;            // visitors just follow the link
+    e.preventDefault(); e.stopPropagation();
+    fileRef.current && fileRef.current.click();
+  };
+  const pick = (e) => { const f = e.target.files && e.target.files[0]; if (f) readImageFile(f, setImage); };
+
+  return (
+    <section className="cat">
+      <div className="cat-head">
+        <span className="tag"><span className="hash">//</span> PERSONAL</span>
+        <span className="rule"></span>
+        <span className="count">[ 1 ]</span>
+      </div>
+      <a
+        className="promo-banner"
+        href="https://zerotwolove.nl"
+        target={newTab ? "_blank" : "_self"}
+        rel="noopener noreferrer"
+      >
+        <div
+          className={"shot" + (unlocked ? " editable" : "") + (drag ? " dragover" : "")}
+          onDragOver={(e) => { if (!unlocked) return; e.preventDefault(); e.stopPropagation(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={onDrop}
+          onClick={onShotClick}
+          title={unlocked ? "drop or click to set a Zero Two pic" : "zerotwolove.nl"}
+        >
+          {src
+            ? <img src={src} alt="Zero Two" />
+            : <span className="shot-ph">drop<br />Zero&nbsp;Two<br />pic</span>}
+          {unlocked && <span className="shot-dz">DROP PIC</span>}
+          <input ref={fileRef} type="file" accept="image/*" className="hidden-input" onChange={pick} />
+        </div>
+        <div className="b-body">
+          <div className="b-cmd"><span className="p">~/personal</span>$ cat .darling</div>
+          <div className="b-title">zerotwolove.nl <span className="hb">♥</span></div>
+          <div className="b-tag">A little corner of the web, made with love for my darling Zero Two.</div>
+          <div className="b-cta">enter the archive →</div>
+        </div>
+      </a>
+    </section>
+  );
+}
+
+/* ============================================================
    Typewriter — cycles multilingual subtitle
    ============================================================ */
 function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
@@ -261,4 +332,4 @@ function AuthModal({ reason, onSubmit, onClose }) {
   );
 }
 
-Object.assign(window, { Typewriter, StatusDot, ServiceTile, EditModal, AuthModal, hostOf, monogram });
+Object.assign(window, { Typewriter, StatusDot, ServiceTile, EditModal, AuthModal, DarlingBanner, hostOf, monogram });

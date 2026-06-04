@@ -7,9 +7,9 @@
 
   <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this
        page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the
-       backend's public base URL, e.g. content="https://api.zerotwosystems.com". Leave
+       backend's public base URL, e.g. content="https://api.zerotwosystems.nl". Leave
        empty when the same server serves both this page and /api/. -->
-  <meta name="zerotwo-api-base" content="https://api.zerotwosystems.com"/>
+  <meta name="zerotwo-api-base" content="" />
 
   <!-- Single self-contained build. Drop index.html into your nginx web root.
        The request system's per-IP/day limit
@@ -1034,6 +1034,146 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
   .tile .name .caret { opacity: 1; transform: none; }
 }
 
+/* ============================================================
+   // PERSONAL — zerotwolove.nl featured strip
+   A warm side-project banner. A single pink accent that only
+   blooms on hover, so it never competes with the green nexus.
+   ============================================================ */
+:root {
+  --pink:      #ff6fa5;
+  --pink-hi:   #ff9ec6;
+  --pink-line: rgba(255, 111, 165, 0.42);
+  --pink-soft: rgba(255, 111, 165, 0.16);
+  --pink-glow: 0 0 14px rgba(255, 111, 165, 0.30);
+}
+
+.promo-banner {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--pink-line);
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+.promo-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 140% at 0% 50%, var(--pink-soft), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+.promo-banner:hover {
+  border-color: var(--pink-line);
+  box-shadow: var(--pink-glow);
+  transform: translateY(-2px);
+}
+.promo-banner:hover::before { opacity: 1; }
+
+/* image slot (drop / click a Zero Two pic — operator only) */
+.promo-banner .shot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 138px;
+  align-self: stretch;
+  min-height: 118px;
+  border: 1px solid var(--line);
+  background: #060a08;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.promo-banner .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.promo-banner .shot-ph {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+  pointer-events: none;
+}
+.promo-banner .shot.editable { cursor: pointer; }
+.promo-banner .shot-dz {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  background: rgba(255, 111, 165, 0.92);
+  opacity: 0;
+  text-align: center;
+}
+.promo-banner .shot.dragover { border-color: var(--pink); box-shadow: var(--pink-glow); }
+.promo-banner .shot.dragover .shot-dz { opacity: 1; }
+
+.promo-banner .b-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+.promo-banner .b-cmd {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  margin-bottom: 1px;
+}
+.promo-banner .b-cmd .p { color: var(--green); text-shadow: var(--glow); }
+.promo-banner .b-title {
+  color: var(--green-hi);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: color 0.18s ease;
+}
+.promo-banner .b-title .hb {
+  font-size: 14px;
+  color: var(--pink);
+  text-shadow: 0 0 9px rgba(255, 111, 165, 0.6);
+}
+.promo-banner:hover .b-title { color: var(--pink-hi); }
+.promo-banner .b-tag {
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 50ch;
+}
+.promo-banner .b-cta {
+  margin-top: 3px;
+  color: var(--pink);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.promo-banner:hover .b-cta { opacity: 1; transform: translateX(3px); }
+
+@media (max-width: 600px) {
+  .promo-banner { gap: 14px; padding: 14px; }
+  .promo-banner .shot { width: 96px; min-height: 96px; }
+  .promo-banner .b-title { font-size: 18px; }
+}
+
+/* ---- terminal easter-egg: the `zerotwo` payoff ---- */
+.zt-heart { color: var(--pink); text-shadow: 0 0 9px rgba(255, 111, 165, 0.5); }
+.zt-hi { color: var(--pink-hi); }
+.term-link.zt-link, .zt-link { color: var(--pink); text-decoration: underline; cursor: pointer; }
+.term-link.zt-link:hover, .zt-link:hover { color: var(--pink-hi); }
+
   </style>
 </head>
 <body>
@@ -1446,6 +1586,112 @@ function readImageFile(file, cb) {
 }
 
 /* ============================================================
+   // PERSONAL — zerotwolove.nl featured strip
+   A warm plug for the side project. Drop (or click) a Zero Two
+   pic onto the slot to set it — saved locally, operator only.
+   To bake in a permanent image instead, drop a file in assets/
+   and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
+   ============================================================ */
+const DARLING_IMG = ""; // optional permanent image path
+const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
+function DarlingBanner({
+  unlocked,
+  newTab
+}) {
+  const [img, setImg] = useState(() => {
+    try {
+      return localStorage.getItem(DARLING_IMG_KEY) || "";
+    } catch (e) {
+      return "";
+    }
+  });
+  const [drag, setDrag] = useState(false);
+  const fileRef = useRef(null);
+  const src = img || DARLING_IMG;
+  const setImage = data => {
+    setImg(data);
+    try {
+      data ? localStorage.setItem(DARLING_IMG_KEY, data) : localStorage.removeItem(DARLING_IMG_KEY);
+    } catch (e) {}
+  };
+  const onDrop = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDrag(false);
+    if (!unlocked) return;
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) readImageFile(f, setImage);
+  };
+  const onShotClick = e => {
+    if (!unlocked) return; // visitors just follow the link
+    e.preventDefault();
+    e.stopPropagation();
+    fileRef.current && fileRef.current.click();
+  };
+  const pick = e => {
+    const f = e.target.files && e.target.files[0];
+    if (f) readImageFile(f, setImage);
+  };
+  return /*#__PURE__*/React.createElement("section", {
+    className: "cat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cat-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tag"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hash"
+  }, "//"), " PERSONAL"), /*#__PURE__*/React.createElement("span", {
+    className: "rule"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "count"
+  }, "[ 1 ]")), /*#__PURE__*/React.createElement("a", {
+    className: "promo-banner",
+    href: "https://zerotwolove.nl",
+    target: newTab ? "_blank" : "_self",
+    rel: "noopener noreferrer"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "shot" + (unlocked ? " editable" : "") + (drag ? " dragover" : ""),
+    onDragOver: e => {
+      if (!unlocked) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setDrag(true);
+    },
+    onDragLeave: () => setDrag(false),
+    onDrop: onDrop,
+    onClick: onShotClick,
+    title: unlocked ? "drop or click to set a Zero Two pic" : "zerotwolove.nl"
+  }, src ? /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "Zero Two"
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "shot-ph"
+  }, "drop", /*#__PURE__*/React.createElement("br", null), "Zero\xA0Two", /*#__PURE__*/React.createElement("br", null), "pic"), unlocked && /*#__PURE__*/React.createElement("span", {
+    className: "shot-dz"
+  }, "DROP PIC"), /*#__PURE__*/React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    className: "hidden-input",
+    onChange: pick
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "b-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "b-cmd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "p"
+  }, "~/personal"), "$ cat .darling"), /*#__PURE__*/React.createElement("div", {
+    className: "b-title"
+  }, "zerotwolove.nl ", /*#__PURE__*/React.createElement("span", {
+    className: "hb"
+  }, "\u2665")), /*#__PURE__*/React.createElement("div", {
+    className: "b-tag"
+  }, "A little corner of the web, made with love for my darling Zero Two."), /*#__PURE__*/React.createElement("div", {
+    className: "b-cta"
+  }, "enter the archive \u2192"))));
+}
+
+/* ============================================================
    Typewriter — cycles multilingual subtitle
    ============================================================ */
 function Typewriter({
@@ -1793,6 +2039,7 @@ Object.assign(window, {
   ServiceTile,
   EditModal,
   AuthModal,
+  DarlingBanner,
   hostOf,
   monogram
 });
@@ -1815,7 +2062,7 @@ const {
   useRef,
   useCallback
 } = React;
-const REQ_SERVICES = ["jellyfin", navidrome"plex", "immich", "", "nextcloud"];
+const REQ_SERVICES = ["jellyfin", "plex", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1"; // client soft-limit timestamp
 const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
@@ -2387,7 +2634,7 @@ const {
   useRef,
   useCallback
 } = React;
-const TERM_CMDS = ["help", "ls", "services", "open", "go", "launch", "status", "ping", "search", "google", "add", "edit", "rm", "del", "delete", "clear", "cls", "date", "whoami", "echo", "neofetch", "about", "history", "requests", "request", "passwd", "lock", "sudo", "exit", "close"];
+const TERM_CMDS = ["help", "ls", "services", "open", "go", "launch", "status", "ping", "search", "google", "add", "edit", "rm", "del", "delete", "clear", "cls", "date", "whoami", "echo", "neofetch", "about", "history", "requests", "request", "passwd", "lock", "sudo", "exit", "close", "zerotwo", "darling", "02"];
 const ARG_CMDS = ["open", "go", "launch", "edit", "rm", "del", "delete", "status", "cat"];
 function tpad(s, n) {
   s = String(s);
@@ -2436,6 +2683,15 @@ function Terminal({
     }, "help"), " for a list of commands \xB7 ", /*#__PURE__*/React.createElement("span", {
       className: "l-ok"
     }, "neofetch"), " for system info")
+  }, {
+    id: -3,
+    node: /*#__PURE__*/React.createElement("div", {
+      className: "term-line l-dim"
+    }, "psst \u2014 try ", /*#__PURE__*/React.createElement("span", {
+      className: "zt-link"
+    }, "zerotwo"), " ", /*#__PURE__*/React.createElement("span", {
+      className: "zt-heart"
+    }, "\u2665"))
   }]);
   const push = useCallback(node => setLines(p => [...p, {
     id: idRef.current++,
@@ -2682,6 +2938,41 @@ function Terminal({
         line("opening account-request form…", "l-sys");
         if (onRequest) onRequest();
         break;
+      case "zerotwo":
+      case "darling":
+      case "02":
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "zt-heart"
+        }, "  ♥♥   ♥♥"));
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "zt-heart"
+        }, "  ♥♥♥♥♥♥♥"));
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "zt-heart"
+        }, "   ♥♥♥♥♥"));
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "zt-heart"
+        }, "    ♥♥♥"));
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "zt-heart"
+        }, "     ♥"));
+        line(/*#__PURE__*/React.createElement("span", null, "\xA0"));
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "zt-hi"
+        }, "darling://zerotwolove.nl \u2014 archive online"));
+        line(/*#__PURE__*/React.createElement("span", {
+          className: "l-dim"
+        }, "// a little corner of the web, made with love for my darling Zero Two"));
+        line(/*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+          className: "l-dim"
+        }, "opening "), /*#__PURE__*/React.createElement("span", {
+          className: "term-link zt-link",
+          onClick: () => onLaunch("https://zerotwolove.nl")
+        }, "zerotwolove.nl"), /*#__PURE__*/React.createElement("span", {
+          className: "l-dim"
+        }, " in a new tab\u2026")));
+        onLaunch("https://zerotwolove.nl");
+        break;
       case "clear":
       case "cls":
         setLines([]);
@@ -2811,14 +3102,14 @@ const SEED = [{
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "https://fin.zerotwosystems.com"
+  url: "http://192.168.1.83:30013/web/#/home"
 }, {
   id: "navidrome",
   name: "Navidrome",
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "https://music.zerotwosystems.com"
+  url: "http://192.168.1.83:30043/app/#/album/recentlyAdded?sort=recently_added&order=DESC&filter=%7B%7D"
 }, {
   id: "immich",
   name: "Immich",
@@ -2853,7 +3144,7 @@ const SEED = [{
   category: "NETWORK & AUTOMATION",
   statusMode: "auto",
   icon: "",
-  url: "https://home.zerotwosystems.com/"
+  url: "https://192.168.1.83:30103/onboarding.html"
 }];
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 function load() {
@@ -3254,7 +3545,10 @@ function App() {
     onClick: () => setModal({
       new: true
     })
-  }, "+ new node / category")), query && matches.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, "+ new node / category")), !query && /*#__PURE__*/React.createElement(DarlingBanner, {
+    unlocked: unlocked,
+    newTab: newTab
+  }), query && matches.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "no-match"
   }, "no service matches \u201C", q, "\u201D.\xA0", /*#__PURE__*/React.createElement("span", {
     className: "g",

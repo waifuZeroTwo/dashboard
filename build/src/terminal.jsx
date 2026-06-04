@@ -10,6 +10,7 @@ const TERM_CMDS = [
   "search", "google", "add", "edit", "rm", "del", "delete", "clear",
   "cls", "date", "whoami", "echo", "neofetch", "about", "history",
   "requests", "request", "passwd", "lock", "sudo", "exit", "close",
+  "zerotwo", "darling", "02",
 ];
 const ARG_CMDS = ["open", "go", "launch", "edit", "rm", "del", "delete", "status", "cat"];
 
@@ -36,6 +37,7 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
   const [lines, setLines] = useState(() => [
     { id: -2, node: <div className="term-line l-sys">ZeroTwo Nexus shell · v1.0</div> },
     { id: -1, node: <div className="term-line l-dim">type <span className="l-ok">help</span> for a list of commands · <span className="l-ok">neofetch</span> for system info</div> },
+    { id: -3, node: <div className="term-line l-dim">psst — try <span className="zt-link">zerotwo</span> <span className="zt-heart">♥</span></div> },
   ]);
 
   const push = useCallback((node) => setLines((p) => [...p, { id: idRef.current++, node }]), []);
@@ -257,6 +259,27 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
       case "request":
         line("opening account-request form…", "l-sys");
         if (onRequest) onRequest();
+        break;
+
+      case "zerotwo":
+      case "darling":
+      case "02":
+        line(<span className="zt-heart">{"  ♥♥   ♥♥"}</span>);
+        line(<span className="zt-heart">{"  ♥♥♥♥♥♥♥"}</span>);
+        line(<span className="zt-heart">{"   ♥♥♥♥♥"}</span>);
+        line(<span className="zt-heart">{"    ♥♥♥"}</span>);
+        line(<span className="zt-heart">{"     ♥"}</span>);
+        line(<span>&nbsp;</span>);
+        line(<span className="zt-hi">darling://zerotwolove.nl — archive online</span>);
+        line(<span className="l-dim">// a little corner of the web, made with love for my darling Zero Two</span>);
+        line(
+          <span>
+            <span className="l-dim">opening </span>
+            <span className="term-link zt-link" onClick={() => onLaunch("https://zerotwolove.nl")}>zerotwolove.nl</span>
+            <span className="l-dim"> in a new tab…</span>
+          </span>
+        );
+        onLaunch("https://zerotwolove.nl");
         break;
 
       case "clear":

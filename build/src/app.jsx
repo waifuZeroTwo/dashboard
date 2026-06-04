@@ -350,6 +350,9 @@ function App() {
           </div>
         )}
 
+        {/* personal — zerotwolove.nl */}
+        {!query && <DarlingBanner unlocked={unlocked} newTab={newTab} />}
+
         {/* no matches */}
         {query && matches.length === 0 && (
           <div className="no-match">
