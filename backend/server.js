@@ -40,7 +40,7 @@ const MAX_BODY = 4 * 1024;          // 4 KB hard cap on request bodies
 const MAX_PENDING = 500;            // refuse new requests beyond this (anti disk-fill)
 const MAX_TOTAL = 5000;             // hard cap on stored rows
 const MIN_FORM_MS = 1200;           // submitted faster than this == bot
-const ALLOWED_SERVICES = ["jellyfin", "plex", "immich", "navidrome", "nextcloud"];
+const ALLOWED_SERVICES = ["jellyfin", "plex", "seerr", "immich", "navidrome", "nextcloud"];
 const LIMITS = { username: 60, contact: 80, referral: 200, note: 500 };
 
 // CORS: comma-separated list of page origins allowed to call this API from a

@@ -49,6 +49,10 @@ DEPLOY-siteground-truenas.md       Split-hosting guide for SiteGround, TrueNAS, 
 README.md                          Project overview
 ```
 
+## Merged handoff additions
+
+This build merges the production dashboard with the newer ZeroTwo handoff design. It keeps the existing dashboard/backend features and adds the Seerr service tile, the public “how to request a movie or show” guide, and matching request-service support in the frontend and backend. The original handoff prototype files are kept under `_handoff_design/` for reference.
+
 ## Quick start
 
 ### Static dashboard only

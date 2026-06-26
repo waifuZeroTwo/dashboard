@@ -14,7 +14,7 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
    the printed hash here. The plaintext is never stored in this file.
    NOTE: a static page can only DETER tampering. For real enforcement put the
    page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
-const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
+const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
 
 const TITLE_CYCLE = [
     "HomeLab Nexus",
@@ -30,11 +30,16 @@ const TITLE_CYCLE = [
 ];
 
 /* ---- seed services (from operator config) ---- */
+const SEERR_URL = "https://seerr.zerotwosystems.com/";
+const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
+
 const SEED = [
   { id: "plex",      name: "Plex",          category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1" },
   { id: "jellyfin",  name: "Jellyfin",      category: "MEDIA",  statusMode: "auto", icon: "",
-    url: "https://fin.zerotwosystems.com/" },
+    url: JELLYFIN_URL },
+  { id: "seerr",     name: "Seerr",         category: "MEDIA",  statusMode: "auto", icon: "",
+    url: SEERR_URL },
   { id: "navidrome", name: "Navidrome",     category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://music.zerotwosystems.com/" },
   { id: "immich",    name: "Immich",        category: "MEDIA",  statusMode: "auto", icon: "",
@@ -49,12 +54,30 @@ const SEED = [
     url: "https://home.zerotwosystems.com/" },
 ];
 
+/* ---- one-time migration of a previously-saved dashboard ----
+   Keeps existing user tiles, but adds the newer Seerr request portal and
+   repoints old Jellyfin raw-IP entries to the public Jellyfin URL. */
+function migrate(list) {
+  let out = Array.isArray(list) ? list.slice() : [];
+  out = out.map((s) =>
+    s.id === "jellyfin" && /(192\.168\.|:30013)/.test(s.url || "")
+      ? { ...s, url: JELLYFIN_URL }
+      : s
+  );
+  if (!out.some((s) => s.id === "seerr")) {
+    const seerr = { id: "seerr", name: "Seerr", category: "MEDIA", statusMode: "auto", icon: "", url: SEERR_URL };
+    const ji = out.findIndex((s) => s.id === "jellyfin");
+    if (ji >= 0) out.splice(ji + 1, 0, seerr); else out.push(seerr);
+  }
+  return out;
+}
+
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d) && d.length) return d; }
+    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d) && d.length) return migrate(d); }
   } catch (e) {}
   return SEED;
 }
@@ -99,6 +122,7 @@ function App() {
   const [unlocked, setUnlocked] = useState(() => { try { return sessionStorage.getItem(UNLOCK_KEY) === "1"; } catch (e) { return false; } });
   const [auth, setAuth] = useState(null); // { reason, then }
   const [reqOpen, setReqOpen] = useState(false);
+  const [howOpen, setHowOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [pendingN, setPendingN] = useState(0);
   const operatorKeyRef = useRef("");
@@ -258,11 +282,11 @@ function App() {
       <div className="topbar">
         <span className="brand">ZEROTWO<b>://</b>NEXUS</span>
         <span className="sep">│</span>
-        <span className="stat"><span className="v">{fmtDate(now)}</span></span>
-        <span className="sep">│</span>
-        <span className="stat"><span className="v">{fmtClock(now)}</span></span>
+        <span className="stat t-date"><span className="v">{fmtDate(now)}</span></span>
+        <span className="sep t-sep-clock">│</span>
+        <span className="stat t-clock"><span className="v">{fmtClock(now)}</span></span>
         <span className="spacer"></span>
-        <span className="stat">● <span className="v">{onlineCount}/{tracked}</span> NODES ONLINE</span>
+        <span className="stat t-nodes">● <span className="v">{onlineCount}/{tracked}</span> NODES ONLINE</span>
         <button className="btn req-cta" onClick={() => setReqOpen(true)}>request access</button>
         <span
           className={"lock" + (unlocked ? " open" : "")}
@@ -312,6 +336,15 @@ function App() {
             </span>
           </form>
         </header>
+
+        {/* how-requesting-works — discreet, non-tech-savvy explainer */}
+        {!query && (
+          <button className="howto-trigger" onClick={() => setHowOpen(true)}>
+            <span className="ic">?</span>
+            <span className="lbl">new here — how to request a movie or show</span>
+            <span className="arr">→</span>
+          </button>
+        )}
 
         {/* categories */}
         {categories.map((cat) => {
@@ -411,6 +444,9 @@ function App() {
 
       {/* request panel (public) */}
       <RequestPanel open={reqOpen} onClose={() => setReqOpen(false)} />
+
+      {/* how-it-works explainer (fades in) */}
+      <HowItWorks open={howOpen} onClose={() => setHowOpen(false)} newTab={newTab} seerrUrl={SEERR_URL} />
 
       {/* operator inbox (gated) */}
       <OperatorRequests

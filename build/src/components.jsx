@@ -332,4 +332,120 @@ function AuthModal({ reason, onSubmit, onClose }) {
   );
 }
 
-Object.assign(window, { Typewriter, StatusDot, ServiceTile, EditModal, AuthModal, DarlingBanner, hostOf, monogram });
+/* ============================================================
+   HowItWorks — plain-language "how requesting works" explainer.
+   Fades in over the page. Written for people who aren't technical:
+   request in Seerr -> it downloads itself -> it shows up in Jellyfin.
+   A collapsed "under the hood" drawer keeps the pipeline detail out
+   of the way for the curious.
+   ============================================================ */
+const HOW_STEPS = [
+  {
+    n: "01", k: "ask",
+    title: "Ask for it",
+    body: "Open the request portal and search for any movie or show — new releases, old favourites, a whole series. Found it? Press Request. That's the only thing you ever have to do.",
+  },
+  {
+    n: "02", k: "fetch",
+    title: "It fetches itself",
+    body: "From here it's automatic. The system goes and finds a good-quality copy, downloads it, and files it away for you. No buttons, no waiting around — you can close the tab and forget about it.",
+  },
+  {
+    n: "03", k: "watch",
+    title: "Play it in Jellyfin",
+    body: "When it's ready it simply appears in Jellyfin, as if it had always been there. Press play. Most things land within minutes; big or hard-to-find titles can take a few hours.",
+  },
+];
+
+function HowItWorks({ open, onClose, newTab, seerrUrl }) {
+  const [more, setMore] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  return (
+    <div
+      className={"how-back" + (open ? " open" : "")}
+      onMouseDown={onClose}
+      aria-hidden={!open}
+    >
+      <div className="how" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="how requesting works">
+        <div className="how-head">
+          <div className="ht">
+            <span className="kw">// guide</span>
+            <h2>How requesting works</h2>
+            <p>The no-jargon version — for anyone who just wants to watch something.</p>
+          </div>
+          <span className="x" onClick={onClose} title="close">✕</span>
+        </div>
+
+        <div className="how-body">
+          <p className="how-intro">
+            Want to watch something that isn't in the library yet? You don't have to message
+            anyone. Just <b>request it</b> — here's the whole journey, start to finish.
+          </p>
+
+          <div className="how-steps">
+            {HOW_STEPS.map((s, i) => (
+              <div className={"how-step k-" + s.k} key={s.n}>
+                <div className="rail">
+                  <span className="num">{s.n}</span>
+                  {i < HOW_STEPS.length - 1 && <span className="conn"></span>}
+                </div>
+                <div className="step-body">
+                  <div className="step-title">{s.title}</div>
+                  <p>{s.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="how-know">
+            <span className="kh">good to know</span>
+            <ul>
+              <li>One request covers the whole thing — ask for a series and you get every season and episode.</li>
+              <li>You always watch in <b>Jellyfin</b>. The request portal is just your wishlist — it doesn't play anything itself.</li>
+              <li>If someone already requested it, it'll simply show as available — no harm in asking twice.</li>
+            </ul>
+          </div>
+
+          <div className="how-under">
+            <button className={"hu-toggle" + (more ? " on" : "")} onClick={() => setMore((v) => !v)}>
+              <span className="chev">{more ? "▾" : "▸"}</span> under the hood — for the curious
+            </button>
+            {more && (
+              <div className="hu-body">
+                <p>
+                  Seerr hands your request to <b>Radarr</b> (films) or <b>Sonarr</b> (TV). They search
+                  <b> nzbgeek</b> for a release, then <b>NZBGet</b> pulls it down over <b>Newshosting</b> —
+                  or <b>qBittorrent</b> grabs a torrent — and drops the file into the library Jellyfin reads from.
+                </p>
+                <div className="hu-chain">
+                  <span>Seerr</span><i>→</i><span>Radarr / Sonarr</span><i>→</i><span>nzbgeek</span><i>→</i><span>NZBGet · Newshosting</span><i>→</i><span className="end">Jellyfin</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="how-foot">
+          <a
+            className="btn on how-cta"
+            href={seerrUrl}
+            target={newTab ? "_blank" : "_self"}
+            rel="noopener noreferrer"
+          >
+            open the request portal →
+          </a>
+          <button className="btn" onClick={onClose}>got it</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Typewriter, StatusDot, ServiceTile, EditModal, AuthModal, DarlingBanner, HowItWorks, hostOf, monogram });

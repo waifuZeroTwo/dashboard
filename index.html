@@ -7,9 +7,9 @@
 
   <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this
        page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the
-       backend's public base URL, e.g. content="https://api.zerotwosystems.com". Leave
+       backend's public base URL, e.g. content="https://api.zerotwosystems.nl". Leave
        empty when the same server serves both this page and /api/. -->
-  <meta name="zerotwo-api-base" content="https://api.zerotwosystems.com" />
+  <meta name="zerotwo-api-base" content="" />
 
   <!-- Single self-contained build. Drop index.html into your nginx web root.
        The request system's per-IP/day limit
@@ -1174,6 +1174,240 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 .term-link.zt-link, .zt-link { color: var(--pink); text-decoration: underline; cursor: pointer; }
 .term-link.zt-link:hover, .zt-link:hover { color: var(--pink-hi); }
 
+/* ============================================================
+   How-requesting-works — discreet trigger + fade-in explainer
+   ============================================================ */
+
+/* discreet trigger that sits above the service grid */
+.howto-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 9px 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed var(--line);
+  cursor: pointer;
+  opacity: 0.78;
+  transition: opacity 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.howto-trigger:hover {
+  opacity: 1;
+  color: var(--ink);
+  border-color: var(--line-2);
+  box-shadow: var(--glow-soft);
+}
+.howto-trigger .ic {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: var(--glow);
+  flex: 0 0 auto;
+}
+.howto-trigger .arr { color: var(--green-dim); transition: transform 0.16s ease; }
+.howto-trigger:hover .arr { transform: translateX(3px); color: var(--green-hi); }
+
+/* fade-in backdrop (kept mounted so it fades both ways) */
+.how-back {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(3, 6, 5, 0.82);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.36s ease;
+}
+.how-back.open { opacity: 1; pointer-events: auto; }
+
+.how {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-2);
+  background: var(--panel-2);
+  box-shadow: var(--glow-soft), 0 36px 90px rgba(0, 0, 0, 0.62);
+  transform: translateY(14px) scale(0.985);
+  transition: transform 0.36s cubic-bezier(.2,.85,.2,1);
+}
+.how-back.open .how { transform: translateY(0) scale(1); }
+
+.how-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(14,24,19,0.6), transparent);
+}
+.how-head .ht { flex: 1; min-width: 0; }
+.how-head .kw {
+  color: var(--green-dim);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.how-head h2 {
+  margin: 7px 0 6px;
+  color: var(--green-hi);
+  text-shadow: var(--glow);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.how-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.how-head .x { cursor: pointer; color: var(--muted); font-size: 16px; flex: 0 0 auto; line-height: 1; padding: 4px; }
+.how-head .x:hover { color: var(--red); }
+
+.how-body { flex: 1; overflow-y: auto; padding: 22px 24px; }
+.how-intro {
+  margin: 0 0 22px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.how-intro b { color: var(--green-hi); }
+
+/* numbered step flow */
+.how-steps { display: flex; flex-direction: column; }
+.how-step { display: flex; gap: 18px; }
+.how-step .rail {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+}
+.how-step .num {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-2);
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: var(--glow);
+  background: rgba(74,240,169,0.05);
+  flex: 0 0 auto;
+}
+.how-step .conn {
+  flex: 1;
+  width: 1px;
+  min-height: 14px;
+  margin: 6px 0;
+  background: linear-gradient(180deg, var(--line-2), var(--line));
+}
+.how-step .step-body { padding-bottom: 22px; }
+.how-step .step-title {
+  color: var(--green-hi);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 9px 0 6px;
+}
+.how-step .step-body p { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.6; }
+
+/* good-to-know box */
+.how-know {
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line-2);
+  background: rgba(74,240,169,0.03);
+  padding: 14px 16px 14px 18px;
+}
+.how-know .kh {
+  display: block;
+  color: var(--green-dim);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 9px;
+}
+.how-know ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+.how-know li { color: var(--ink); font-size: 13px; line-height: 1.55; }
+.how-know li::marker { color: var(--green-dim); }
+.how-know b { color: var(--green-hi); }
+
+/* under-the-hood drawer */
+.how-under { margin-top: 18px; }
+.how-under .hu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+  padding: 4px 0;
+}
+.how-under .hu-toggle:hover { color: var(--green-hi); }
+.how-under .hu-toggle .chev { color: var(--green); }
+.how-under .hu-body {
+  margin-top: 12px;
+  border: 1px dashed var(--line);
+  padding: 14px 16px;
+  background: var(--bg-2);
+}
+.how-under .hu-body p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.how-under .hu-body b { color: var(--ink); }
+.how-under .hu-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+.how-under .hu-chain span {
+  color: var(--green-dim);
+  border: 1px solid var(--line);
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+.how-under .hu-chain span.end { color: var(--green-hi); border-color: var(--line-2); text-shadow: var(--glow); }
+.how-under .hu-chain i { color: var(--green); font-style: normal; }
+
+.how-foot {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+}
+.how-foot .how-cta { text-decoration: none; display: inline-flex; align-items: center; }
+
+@media (max-width: 600px) {
+  .how-back { padding: 0; }
+  .how { width: 100%; height: 100%; max-height: 100%; }
+  .how-head h2 { font-size: 22px; }
+  .how-step { gap: 14px; }
+  .how-step .rail { width: 38px; }
+  .how-step .num { width: 38px; height: 38px; font-size: 13px; }
+  .howto-trigger { width: 100%; }
+}
+
   </style>
 </head>
 <body>
@@ -1592,7 +1826,7 @@ function readImageFile(file, cb) {
    To bake in a permanent image instead, drop a file in assets/
    and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
    ============================================================ */
-const DARLING_IMG = "_design_v2/zerotwo/project/assets/ZeroTwo.jpg"; // optional permanent image path
+const DARLING_IMG = ""; // optional permanent image path
 const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
 function DarlingBanner({
   unlocked,
@@ -2033,6 +2267,112 @@ function AuthModal({
     }
   }, "authenticate"))));
 }
+
+/* ============================================================
+   HowItWorks — plain-language "how requesting works" explainer.
+   Fades in over the page. Written for people who aren't technical:
+   request in Seerr -> it downloads itself -> it shows up in Jellyfin.
+   A collapsed "under the hood" drawer keeps the pipeline detail out
+   of the way for the curious.
+   ============================================================ */
+const HOW_STEPS = [{
+  n: "01",
+  k: "ask",
+  title: "Ask for it",
+  body: "Open the request portal and search for any movie or show — new releases, old favourites, a whole series. Found it? Press Request. That's the only thing you ever have to do."
+}, {
+  n: "02",
+  k: "fetch",
+  title: "It fetches itself",
+  body: "From here it's automatic. The system goes and finds a good-quality copy, downloads it, and files it away for you. No buttons, no waiting around — you can close the tab and forget about it."
+}, {
+  n: "03",
+  k: "watch",
+  title: "Play it in Jellyfin",
+  body: "When it's ready it simply appears in Jellyfin, as if it had always been there. Press play. Most things land within minutes; big or hard-to-find titles can take a few hours."
+}];
+function HowItWorks({
+  open,
+  onClose,
+  newTab,
+  seerrUrl
+}) {
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "how-back" + (open ? " open" : ""),
+    onMouseDown: onClose,
+    "aria-hidden": !open
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "how",
+    onMouseDown: e => e.stopPropagation(),
+    role: "dialog",
+    "aria-label": "how requesting works"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "how-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ht"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kw"
+  }, "// guide"), /*#__PURE__*/React.createElement("h2", null, "How requesting works"), /*#__PURE__*/React.createElement("p", null, "The no-jargon version \u2014 for anyone who just wants to watch something.")), /*#__PURE__*/React.createElement("span", {
+    className: "x",
+    onClick: onClose,
+    title: "close"
+  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
+    className: "how-body"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "how-intro"
+  }, "Want to watch something that isn't in the library yet? You don't have to message anyone. Just ", /*#__PURE__*/React.createElement("b", null, "request it"), " \u2014 here's the whole journey, start to finish."), /*#__PURE__*/React.createElement("div", {
+    className: "how-steps"
+  }, HOW_STEPS.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    className: "how-step k-" + s.k,
+    key: s.n
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rail"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "num"
+  }, s.n), i < HOW_STEPS.length - 1 && /*#__PURE__*/React.createElement("span", {
+    className: "conn"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "step-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "step-title"
+  }, s.title), /*#__PURE__*/React.createElement("p", null, s.body))))), /*#__PURE__*/React.createElement("div", {
+    className: "how-know"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kh"
+  }, "good to know"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, "One request covers the whole thing \u2014 ask for a series and you get every season and episode."), /*#__PURE__*/React.createElement("li", null, "You always watch in ", /*#__PURE__*/React.createElement("b", null, "Jellyfin"), ". The request portal is just your wishlist \u2014 it doesn't play anything itself."), /*#__PURE__*/React.createElement("li", null, "If someone already requested it, it'll simply show as available \u2014 no harm in asking twice."))), /*#__PURE__*/React.createElement("div", {
+    className: "how-under"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "hu-toggle" + (more ? " on" : ""),
+    onClick: () => setMore(v => !v)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "chev"
+  }, more ? "▾" : "▸"), " under the hood \u2014 for the curious"), more && /*#__PURE__*/React.createElement("div", {
+    className: "hu-body"
+  }, /*#__PURE__*/React.createElement("p", null, "Seerr hands your request to ", /*#__PURE__*/React.createElement("b", null, "Radarr"), " (films) or ", /*#__PURE__*/React.createElement("b", null, "Sonarr"), " (TV). They search", /*#__PURE__*/React.createElement("b", null, " nzbgeek"), " for a release, then ", /*#__PURE__*/React.createElement("b", null, "NZBGet"), " pulls it down over ", /*#__PURE__*/React.createElement("b", null, "Newshosting"), " \u2014 or ", /*#__PURE__*/React.createElement("b", null, "qBittorrent"), " grabs a torrent \u2014 and drops the file into the library Jellyfin reads from."), /*#__PURE__*/React.createElement("div", {
+    className: "hu-chain"
+  }, /*#__PURE__*/React.createElement("span", null, "Seerr"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", null, "Radarr / Sonarr"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", null, "nzbgeek"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", null, "NZBGet \xB7 Newshosting"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", {
+    className: "end"
+  }, "Jellyfin"))))), /*#__PURE__*/React.createElement("div", {
+    className: "how-foot"
+  }, /*#__PURE__*/React.createElement("a", {
+    className: "btn on how-cta",
+    href: seerrUrl,
+    target: newTab ? "_blank" : "_self",
+    rel: "noopener noreferrer"
+  }, "open the request portal \u2192"), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    onClick: onClose
+  }, "got it"))));
+}
 Object.assign(window, {
   Typewriter,
   StatusDot,
@@ -2040,6 +2380,7 @@ Object.assign(window, {
   EditModal,
   AuthModal,
   DarlingBanner,
+  HowItWorks,
   hostOf,
   monogram
 });
@@ -2062,7 +2403,7 @@ const {
   useRef,
   useCallback
 } = React;
-const REQ_SERVICES = ["jellyfin", "plex", "immich", "navidrome", "nextcloud"];
+const REQ_SERVICES = ["jellyfin", "plex", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1"; // client soft-limit timestamp
 const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
@@ -3085,21 +3426,12 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
    the printed hash here. The plaintext is never stored in this file.
    NOTE: a static page can only DETER tampering. For real enforcement put the
    page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
-const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
-    const TITLE_CYCLE = [
-        "HomeLab Nexus",
-        "होमलैब नेक्सस",
-        "ホームラボ・ネクサス",
-        "家庭实验室枢纽",
-        "محور المختبر المنزلي",
-        "Узел домашней лаборатории",
-        "홈랩 넥서스",
-        "ศูนย์กลางโฮมแล็บ",
-        "Kitovu cha Maabara ya Nyumbani",
-        "Kotilaboratorion Solmukohta",
-    ];
+const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
+const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽", "محور المختبر المنزلي", "Узел домашней лаборатории", "홈랩 넥서스", "ศูนย์กลางโฮมแล็บ", "Kitovu cha Maabara ya Nyumbani", "Kotilaboratorion Solmukohta"];
 
 /* ---- seed services (from operator config) ---- */
+const SEERR_URL = "https://seerr.zerotwosystems.com/";
+const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
 const SEED = [{
   id: "plex",
   name: "Plex",
@@ -3113,7 +3445,14 @@ const SEED = [{
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
-  url: "https://fin.zerotwosystems.com/"
+  url: JELLYFIN_URL
+}, {
+  id: "seerr",
+  name: "Seerr",
+  category: "MEDIA",
+  statusMode: "auto",
+  icon: "",
+  url: SEERR_URL
 }, {
   id: "navidrome",
   name: "Navidrome",
@@ -3157,13 +3496,37 @@ const SEED = [{
   icon: "",
   url: "https://home.zerotwosystems.com/"
 }];
+
+/* ---- one-time migration of a previously-saved dashboard ----
+   Keeps existing user tiles, but adds the newer Seerr request portal and
+   repoints old Jellyfin raw-IP entries to the public Jellyfin URL. */
+function migrate(list) {
+  let out = Array.isArray(list) ? list.slice() : [];
+  out = out.map(s => s.id === "jellyfin" && /(192\.168\.|:30013)/.test(s.url || "") ? {
+    ...s,
+    url: JELLYFIN_URL
+  } : s);
+  if (!out.some(s => s.id === "seerr")) {
+    const seerr = {
+      id: "seerr",
+      name: "Seerr",
+      category: "MEDIA",
+      statusMode: "auto",
+      icon: "",
+      url: SEERR_URL
+    };
+    const ji = out.findIndex(s => s.id === "jellyfin");
+    if (ji >= 0) out.splice(ji + 1, 0, seerr);else out.push(seerr);
+  }
+  return out;
+}
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
       const d = JSON.parse(raw);
-      if (Array.isArray(d) && d.length) return d;
+      if (Array.isArray(d) && d.length) return migrate(d);
     }
   } catch (e) {}
   return SEED;
@@ -3237,6 +3600,7 @@ function App() {
   });
   const [auth, setAuth] = useState(null); // { reason, then }
   const [reqOpen, setReqOpen] = useState(false);
+  const [howOpen, setHowOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [pendingN, setPendingN] = useState(0);
   const operatorKeyRef = useRef("");
@@ -3431,19 +3795,19 @@ function App() {
   }, "ZEROTWO", /*#__PURE__*/React.createElement("b", null, "://"), "NEXUS"), /*#__PURE__*/React.createElement("span", {
     className: "sep"
   }, "\u2502"), /*#__PURE__*/React.createElement("span", {
-    className: "stat"
+    className: "stat t-date"
   }, /*#__PURE__*/React.createElement("span", {
     className: "v"
   }, fmtDate(now))), /*#__PURE__*/React.createElement("span", {
-    className: "sep"
+    className: "sep t-sep-clock"
   }, "\u2502"), /*#__PURE__*/React.createElement("span", {
-    className: "stat"
+    className: "stat t-clock"
   }, /*#__PURE__*/React.createElement("span", {
     className: "v"
   }, fmtClock(now))), /*#__PURE__*/React.createElement("span", {
     className: "spacer"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "stat"
+    className: "stat t-nodes"
   }, "\u25CF ", /*#__PURE__*/React.createElement("span", {
     className: "v"
   }, onlineCount, "/", tracked), " NODES ONLINE"), /*#__PURE__*/React.createElement("button", {
@@ -3500,7 +3864,16 @@ function App() {
     style: {
       color: "var(--green)"
     }
-  }, matches[0].name)) : /*#__PURE__*/React.createElement("span", null, "\u21B5 google \u201C", q, "\u201D") : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("kbd", null, "/"), " focus \xB7 ", /*#__PURE__*/React.createElement("kbd", null, "\u21B5"), " launch")))), categories.map(cat => {
+  }, matches[0].name)) : /*#__PURE__*/React.createElement("span", null, "\u21B5 google \u201C", q, "\u201D") : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("kbd", null, "/"), " focus \xB7 ", /*#__PURE__*/React.createElement("kbd", null, "\u21B5"), " launch")))), !query && /*#__PURE__*/React.createElement("button", {
+    className: "howto-trigger",
+    onClick: () => setHowOpen(true)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, "?"), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "new here \u2014 how to request a movie or show"), /*#__PURE__*/React.createElement("span", {
+    className: "arr"
+  }, "\u2192")), categories.map(cat => {
     const list = svcs.filter(s => (s.category || "OTHER").toUpperCase() === cat);
     const visible = query ? list.filter(isMatch) : list;
     if (query && visible.length === 0) return null;
@@ -3609,6 +3982,11 @@ function App() {
   }), /*#__PURE__*/React.createElement(RequestPanel, {
     open: reqOpen,
     onClose: () => setReqOpen(false)
+  }), /*#__PURE__*/React.createElement(HowItWorks, {
+    open: howOpen,
+    onClose: () => setHowOpen(false),
+    newTab: newTab,
+    seerrUrl: SEERR_URL
   }), /*#__PURE__*/React.createElement(OperatorRequests, {
     open: inboxOpen,
     operatorKey: operatorKeyRef.current,

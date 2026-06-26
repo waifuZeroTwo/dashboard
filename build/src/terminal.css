@@ -1148,3 +1148,237 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 .zt-hi { color: var(--pink-hi); }
 .term-link.zt-link, .zt-link { color: var(--pink); text-decoration: underline; cursor: pointer; }
 .term-link.zt-link:hover, .zt-link:hover { color: var(--pink-hi); }
+
+/* ============================================================
+   How-requesting-works — discreet trigger + fade-in explainer
+   ============================================================ */
+
+/* discreet trigger that sits above the service grid */
+.howto-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 9px 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed var(--line);
+  cursor: pointer;
+  opacity: 0.78;
+  transition: opacity 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.howto-trigger:hover {
+  opacity: 1;
+  color: var(--ink);
+  border-color: var(--line-2);
+  box-shadow: var(--glow-soft);
+}
+.howto-trigger .ic {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: var(--glow);
+  flex: 0 0 auto;
+}
+.howto-trigger .arr { color: var(--green-dim); transition: transform 0.16s ease; }
+.howto-trigger:hover .arr { transform: translateX(3px); color: var(--green-hi); }
+
+/* fade-in backdrop (kept mounted so it fades both ways) */
+.how-back {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(3, 6, 5, 0.82);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.36s ease;
+}
+.how-back.open { opacity: 1; pointer-events: auto; }
+
+.how {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-2);
+  background: var(--panel-2);
+  box-shadow: var(--glow-soft), 0 36px 90px rgba(0, 0, 0, 0.62);
+  transform: translateY(14px) scale(0.985);
+  transition: transform 0.36s cubic-bezier(.2,.85,.2,1);
+}
+.how-back.open .how { transform: translateY(0) scale(1); }
+
+.how-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(14,24,19,0.6), transparent);
+}
+.how-head .ht { flex: 1; min-width: 0; }
+.how-head .kw {
+  color: var(--green-dim);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.how-head h2 {
+  margin: 7px 0 6px;
+  color: var(--green-hi);
+  text-shadow: var(--glow);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.how-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.how-head .x { cursor: pointer; color: var(--muted); font-size: 16px; flex: 0 0 auto; line-height: 1; padding: 4px; }
+.how-head .x:hover { color: var(--red); }
+
+.how-body { flex: 1; overflow-y: auto; padding: 22px 24px; }
+.how-intro {
+  margin: 0 0 22px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.how-intro b { color: var(--green-hi); }
+
+/* numbered step flow */
+.how-steps { display: flex; flex-direction: column; }
+.how-step { display: flex; gap: 18px; }
+.how-step .rail {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+}
+.how-step .num {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-2);
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: var(--glow);
+  background: rgba(74,240,169,0.05);
+  flex: 0 0 auto;
+}
+.how-step .conn {
+  flex: 1;
+  width: 1px;
+  min-height: 14px;
+  margin: 6px 0;
+  background: linear-gradient(180deg, var(--line-2), var(--line));
+}
+.how-step .step-body { padding-bottom: 22px; }
+.how-step .step-title {
+  color: var(--green-hi);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 9px 0 6px;
+}
+.how-step .step-body p { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.6; }
+
+/* good-to-know box */
+.how-know {
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line-2);
+  background: rgba(74,240,169,0.03);
+  padding: 14px 16px 14px 18px;
+}
+.how-know .kh {
+  display: block;
+  color: var(--green-dim);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 9px;
+}
+.how-know ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+.how-know li { color: var(--ink); font-size: 13px; line-height: 1.55; }
+.how-know li::marker { color: var(--green-dim); }
+.how-know b { color: var(--green-hi); }
+
+/* under-the-hood drawer */
+.how-under { margin-top: 18px; }
+.how-under .hu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-dim);
+  padding: 4px 0;
+}
+.how-under .hu-toggle:hover { color: var(--green-hi); }
+.how-under .hu-toggle .chev { color: var(--green); }
+.how-under .hu-body {
+  margin-top: 12px;
+  border: 1px dashed var(--line);
+  padding: 14px 16px;
+  background: var(--bg-2);
+}
+.how-under .hu-body p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.how-under .hu-body b { color: var(--ink); }
+.how-under .hu-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+.how-under .hu-chain span {
+  color: var(--green-dim);
+  border: 1px solid var(--line);
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+.how-under .hu-chain span.end { color: var(--green-hi); border-color: var(--line-2); text-shadow: var(--glow); }
+.how-under .hu-chain i { color: var(--green); font-style: normal; }
+
+.how-foot {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+}
+.how-foot .how-cta { text-decoration: none; display: inline-flex; align-items: center; }
+
+@media (max-width: 600px) {
+  .how-back { padding: 0; }
+  .how { width: 100%; height: 100%; max-height: 100%; }
+  .how-head h2 { font-size: 22px; }
+  .how-step { gap: 14px; }
+  .how-step .rail { width: 38px; }
+  .how-step .num { width: 38px; height: 38px; font-size: 13px; }
+  .howto-trigger { width: 100%; }
+}
