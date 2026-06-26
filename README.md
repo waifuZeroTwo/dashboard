@@ -6,7 +6,7 @@ The dashboard is designed to be easy to publish. The frontend ships as a single 
 
 ## Highlights
 
-- Public-facing service directory for Jellyfin, Plex, Nextcloud, Immich, Navidrome, TrueNAS, Home Assistant, network tools, and more.
+- Public-facing service directory for Jellyfin, Seerr, Nextcloud, Immich, Navidrome, TrueNAS, Home Assistant, network tools, and more.
 - Terminal-inspired CRT visual style with green-on-black colors, scanlines, and JetBrains Mono typography.
 - Search-first navigation with keyboard shortcuts for fast access to services.
 - Service cards grouped by category with status indicators and custom logo support.

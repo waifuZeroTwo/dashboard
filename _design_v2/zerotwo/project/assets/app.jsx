@@ -25,10 +25,10 @@ const TITLE_CYCLE = [
 
 /* ---- seed services (from operator config) ---- */
 const SEED = [
-  { id: "plex",      name: "Plex",          category: "MEDIA",  statusMode: "auto", icon: "",
-    url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1" },
   { id: "jellyfin",  name: "Jellyfin",      category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://fin.zerotwosystems.com/" },
+  { id: "seerr",     name: "Seerr",         category: "REQUESTS",  statusMode: "auto", icon: "",
+    url: "https://seerr.zerotwosystems.com/" },
   { id: "navidrome", name: "Navidrome",     category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://music.zerotwosystems.com/" },
   { id: "immich",    name: "Immich",        category: "MEDIA",  statusMode: "auto", icon: "",
@@ -37,13 +37,11 @@ const SEED = [
     url: "http://192.168.1.83:81/ui/dashboard" },
   { id: "nextcloud", name: "Nextcloud",     category: "STORAGE & CLOUD", statusMode: "auto", icon: "",
     url: "https://cloud.zerotwosystems.com/" },
-  { id: "porttracker", name: "Porttracker", category: "NETWORK & AUTOMATION", statusMode: "auto", icon: "",
-    url: "http://192.168.1.83:30233/?server=local" },
   { id: "homeassistant", name: "Home Assistant", category: "NETWORK & AUTOMATION", statusMode: "auto", icon: "",
     url: "https://home.zerotwosystems.com/" },
 ];
 
-const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
+const CAT_ORDER = ["MEDIA", "REQUESTS", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 
 function load() {
   try {
@@ -306,6 +304,8 @@ function App() {
             </span>
           </form>
         </header>
+
+        {!query && <HowItWorks />}
 
         {/* categories */}
         {categories.map((cat) => {

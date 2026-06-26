@@ -878,3 +878,59 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .tile:hover { transform: none; }
   .tile .name .caret { display: none; }
 }
+
+/* New-user explainer: fades from the hero into a plain-English automation map. */
+.explain {
+  margin: -8px 0 30px;
+  border: 1px solid rgba(125, 255, 154, 0.18);
+  background:
+    linear-gradient(180deg, rgba(125, 255, 154, 0.08), rgba(125, 255, 154, 0.025) 45%, rgba(6, 10, 7, 0.62)),
+    rgba(6, 10, 7, 0.58);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.03);
+  overflow: hidden;
+  position: relative;
+}
+.explain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(125,255,154,0.08), transparent);
+  opacity: 0;
+  transform: translateX(-40%);
+  transition: opacity 400ms ease, transform 700ms ease;
+}
+.explain.open::before { opacity: 1; transform: translateX(40%); }
+.explain-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.explain-toggle b { display: block; margin-top: 3px; font-size: 15px; letter-spacing: .02em; }
+.mini-cmd { color: var(--green); font-size: 11px; text-transform: uppercase; letter-spacing: .16em; }
+.chev { color: var(--green); font-size: 24px; line-height: 1; }
+.explain-body {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  overflow: hidden;
+  padding: 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+  transition: max-height 520ms ease, opacity 360ms ease, transform 360ms ease, padding 360ms ease;
+}
+.explain.open .explain-body { max-height: 520px; opacity: 1; transform: translateY(0); padding: 0 18px 18px; }
+.explain-body ol { margin: 10px 0 0 20px; padding: 0; }
+.explain-body li { margin: 8px 0; }
+.explain-body b { color: var(--fg); }
+.plain-note { color: var(--green); margin: 12px 0 0; }

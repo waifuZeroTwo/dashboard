@@ -7,9 +7,9 @@
 
   <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this
        page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the
-       backend's public base URL, e.g. content="https://api.zerotwosystems.com". Leave
+       backend's public base URL, e.g. content="https://api.zerotwosystems.nl". Leave
        empty when the same server serves both this page and /api/. -->
-  <meta name="zerotwo-api-base" content="https://api.zerotwosystems.com" />
+  <meta name="zerotwo-api-base" content="" />
 
   <!-- Single self-contained build. Drop index.html into your nginx web root.
        The request system's per-IP/day limit
@@ -1174,6 +1174,62 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 .term-link.zt-link, .zt-link { color: var(--pink); text-decoration: underline; cursor: pointer; }
 .term-link.zt-link:hover, .zt-link:hover { color: var(--pink-hi); }
 
+/* New-user explainer: fades from the hero into a plain-English automation map. */
+.explain {
+  margin: -8px 0 30px;
+  border: 1px solid rgba(125, 255, 154, 0.18);
+  background:
+    linear-gradient(180deg, rgba(125, 255, 154, 0.08), rgba(125, 255, 154, 0.025) 45%, rgba(6, 10, 7, 0.62)),
+    rgba(6, 10, 7, 0.58);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.03);
+  overflow: hidden;
+  position: relative;
+}
+.explain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(125,255,154,0.08), transparent);
+  opacity: 0;
+  transform: translateX(-40%);
+  transition: opacity 400ms ease, transform 700ms ease;
+}
+.explain.open::before { opacity: 1; transform: translateX(40%); }
+.explain-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.explain-toggle b { display: block; margin-top: 3px; font-size: 15px; letter-spacing: .02em; }
+.mini-cmd { color: var(--green); font-size: 11px; text-transform: uppercase; letter-spacing: .16em; }
+.chev { color: var(--green); font-size: 24px; line-height: 1; }
+.explain-body {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  overflow: hidden;
+  padding: 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+  transition: max-height 520ms ease, opacity 360ms ease, transform 360ms ease, padding 360ms ease;
+}
+.explain.open .explain-body { max-height: 520px; opacity: 1; transform: translateY(0); padding: 0 18px 18px; }
+.explain-body ol { margin: 10px 0 0 20px; padding: 0; }
+.explain-body li { margin: 8px 0; }
+.explain-body b { color: var(--fg); }
+.plain-note { color: var(--green); margin: 12px 0 0; }
+
   </style>
 </head>
 <body>
@@ -1592,7 +1648,7 @@ function readImageFile(file, cb) {
    To bake in a permanent image instead, drop a file in assets/
    and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
    ============================================================ */
-const DARLING_IMG = "_design_v2/zerotwo/project/assets/ZeroTwo.jpg"; // optional permanent image path
+const DARLING_IMG = ""; // optional permanent image path
 const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
 function DarlingBanner({
   unlocked,
@@ -1689,6 +1745,24 @@ function DarlingBanner({
   }, "A little corner of the web, made with love for my darling Zero Two."), /*#__PURE__*/React.createElement("div", {
     className: "b-cta"
   }, "enter the archive \u2192"))));
+}
+function HowItWorks() {
+  const [open, setOpen] = useState(false);
+  return /*#__PURE__*/React.createElement("section", {
+    className: "explain" + (open ? " open" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "explain-toggle",
+    onClick: () => setOpen(v => !v),
+    "aria-expanded": open
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    className: "mini-cmd"
+  }, "new here?"), /*#__PURE__*/React.createElement("b", null, "How requests turn into downloads")), /*#__PURE__*/React.createElement("span", {
+    className: "chev"
+  }, open ? "−" : "+")), /*#__PURE__*/React.createElement("div", {
+    className: "explain-body"
+  }, /*#__PURE__*/React.createElement("p", null, "Think of this dashboard like a friendly front desk. Jellyfin is where you watch, and Seerr is where you ask for a movie or show without needing to know the technical pieces."), /*#__PURE__*/React.createElement("ol", null, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Ask in Seerr."), " Search for what you want and press request."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "The helpers take over."), " Sonarr handles TV, Radarr handles movies, and they send the job to qBittorrent or NZBGet."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Usenet is automatic."), " NZBGeek helps find Usenet releases, Newshosting provides access to them, and NZBGet downloads them when that is the best source."), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, "Watch in Jellyfin."), " Once the file is ready, it shows up in Jellyfin at fin.zerotwosystems.com.")), /*#__PURE__*/React.createElement("p", {
+    className: "plain-note"
+  }, "In plain English: request it in Seerr, wait for the automation, then watch it in Jellyfin.")));
 }
 
 /* ============================================================
@@ -2040,6 +2114,7 @@ Object.assign(window, {
   EditModal,
   AuthModal,
   DarlingBanner,
+  HowItWorks,
   hostOf,
   monogram
 });
@@ -2062,7 +2137,7 @@ const {
   useRef,
   useCallback
 } = React;
-const REQ_SERVICES = ["jellyfin", "plex", "immich", "navidrome", "nextcloud"];
+const REQ_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1"; // client soft-limit timestamp
 const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
@@ -3086,34 +3161,23 @@ const UNLOCK_KEY = "zerotwo.unlocked.v1";
    NOTE: a static page can only DETER tampering. For real enforcement put the
    page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
 const OPERATOR_KEY_SHA256 = "4f63929c5c0e5fbea3c74dfeaef6a7dda7568225eaab8febf0c2154a1f847970";
-    const TITLE_CYCLE = [
-        "HomeLab Nexus",
-        "होमलैब नेक्सस",
-        "ホームラボ・ネクサス",
-        "家庭实验室枢纽",
-        "محور المختبر المنزلي",
-        "Узел домашней лаборатории",
-        "홈랩 넥서스",
-        "ศูนย์กลางโฮมแล็บ",
-        "Kitovu cha Maabara ya Nyumbani",
-        "Kotilaboratorion Solmukohta",
-    ];
+const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽", "محور المختبر المنزلي", "Узел домашней лаборатории", "홈랩 넥서스", "ศูนย์กลางโฮมแล็บ", "Kitovu cha Maabara ya Nyumbani", "Kotilaboratorion Solmukohta"];
 
 /* ---- seed services (from operator config) ---- */
 const SEED = [{
-  id: "plex",
-  name: "Plex",
-  category: "MEDIA",
-  statusMode: "auto",
-  icon: "",
-  url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1"
-}, {
   id: "jellyfin",
   name: "Jellyfin",
   category: "MEDIA",
   statusMode: "auto",
   icon: "",
   url: "https://fin.zerotwosystems.com/"
+}, {
+  id: "seerr",
+  name: "Seerr",
+  category: "REQUESTS",
+  statusMode: "auto",
+  icon: "",
+  url: "https://seerr.zerotwosystems.com/"
 }, {
   id: "navidrome",
   name: "Navidrome",
@@ -3143,13 +3207,6 @@ const SEED = [{
   icon: "",
   url: "https://cloud.zerotwosystems.com/"
 }, {
-  id: "porttracker",
-  name: "Porttracker",
-  category: "NETWORK & AUTOMATION",
-  statusMode: "auto",
-  icon: "",
-  url: "http://192.168.1.83:30233/?server=local"
-}, {
   id: "homeassistant",
   name: "Home Assistant",
   category: "NETWORK & AUTOMATION",
@@ -3157,7 +3214,7 @@ const SEED = [{
   icon: "",
   url: "https://home.zerotwosystems.com/"
 }];
-const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
+const CAT_ORDER = ["MEDIA", "REQUESTS", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
@@ -3500,7 +3557,7 @@ function App() {
     style: {
       color: "var(--green)"
     }
-  }, matches[0].name)) : /*#__PURE__*/React.createElement("span", null, "\u21B5 google \u201C", q, "\u201D") : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("kbd", null, "/"), " focus \xB7 ", /*#__PURE__*/React.createElement("kbd", null, "\u21B5"), " launch")))), categories.map(cat => {
+  }, matches[0].name)) : /*#__PURE__*/React.createElement("span", null, "\u21B5 google \u201C", q, "\u201D") : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("kbd", null, "/"), " focus \xB7 ", /*#__PURE__*/React.createElement("kbd", null, "\u21B5"), " launch")))), !query && /*#__PURE__*/React.createElement(HowItWorks, null), categories.map(cat => {
     const list = svcs.filter(s => (s.category || "OTHER").toUpperCase() === cat);
     const visible = query ? list.filter(isMatch) : list;
     if (query && visible.length === 0) return null;

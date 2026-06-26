@@ -97,6 +97,35 @@ function DarlingBanner({ unlocked, newTab }) {
   );
 }
 
+
+function HowItWorks() {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className={"explain" + (open ? " open" : "")}>
+      <button className="explain-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span>
+          <span className="mini-cmd">new here?</span>
+          <b>How requests turn into downloads</b>
+        </span>
+        <span className="chev">{open ? "−" : "+"}</span>
+      </button>
+      <div className="explain-body">
+        <p>
+          Think of this dashboard like a friendly front desk. Jellyfin is where you watch,
+          and Seerr is where you ask for a movie or show without needing to know the technical pieces.
+        </p>
+        <ol>
+          <li><b>Ask in Seerr.</b> Search for what you want and press request.</li>
+          <li><b>The helpers take over.</b> Sonarr handles TV, Radarr handles movies, and they send the job to qBittorrent or NZBGet.</li>
+          <li><b>Usenet is automatic.</b> NZBGeek helps find Usenet releases, Newshosting provides access to them, and NZBGet downloads them when that is the best source.</li>
+          <li><b>Watch in Jellyfin.</b> Once the file is ready, it shows up in Jellyfin at fin.zerotwosystems.com.</li>
+        </ol>
+        <p className="plain-note">In plain English: request it in Seerr, wait for the automation, then watch it in Jellyfin.</p>
+      </div>
+    </section>
+  );
+}
+
 /* ============================================================
    Typewriter — cycles multilingual subtitle
    ============================================================ */
@@ -332,4 +361,4 @@ function AuthModal({ reason, onSubmit, onClose }) {
   );
 }
 
-Object.assign(window, { Typewriter, StatusDot, ServiceTile, EditModal, AuthModal, DarlingBanner, hostOf, monogram });
+Object.assign(window, { Typewriter, StatusDot, ServiceTile, EditModal, AuthModal, DarlingBanner, HowItWorks, hostOf, monogram });
