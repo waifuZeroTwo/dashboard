@@ -13,7 +13,7 @@ Your setup is a **split deployment**:
       │   page JS calls the API (cross-origin, HTTPS)
       ▼
   https://api.zerotwosystems.nl
-      │   public exposure: Cloudflare Tunnel (recommended) — no open ports, free TLS
+      │   public exposure: Cloudflare Tunnel (recommended)  -  no open ports, free TLS
       ▼
   ┌──────────────── TrueNAS SCALE 24.10+ (192.168.1.83) ───────────────┐
   │  cloudflared  →  nginx (limit_req)  →  node server.js               │
@@ -35,7 +35,7 @@ ships with two things wired up for you:
 
 ---
 
-## Part A — SiteGround (the page)
+## Part A  -  SiteGround (the page)
 
 1. **Upload** `index.html` to your site root (`public_html`) via Site
    Tools → File Manager (or SFTP).
@@ -45,7 +45,7 @@ ships with two things wired up for you:
    <meta name="zerotwo-api-base" content="https://api.zerotwosystems.nl" />
    ```
    (It ships empty. Empty = same-origin; you must set it for the split setup.)
-3. SiteGround already serves the page over HTTPS. Load it — everything except the
+3. SiteGround already serves the page over HTTPS. Load it  -  everything except the
    request panel works immediately. The request panel will go live once Parts B–D
    are done; until then it shows demo mode.
 
@@ -54,7 +54,7 @@ ships with two things wired up for you:
 
 ---
 
-## Part B — TrueNAS: run the backend
+## Part B  -  TrueNAS: run the backend
 
 Pick a dataset to hold the app, e.g. `/mnt/<POOL>/apps/zerotwo`. Replace `<POOL>`
 with your pool name everywhere below.
@@ -87,7 +87,7 @@ with your pool name everywhere below.
        volumes:
          - /mnt/<POOL>/apps/zerotwo/server.js:/app/server.js:ro   # <-- EDIT pool
          - /mnt/<POOL>/apps/zerotwo/data:/data                    # <-- EDIT pool
-       # no host port — only nginx talks to it, on the app's internal network
+       # no host port  -  only nginx talks to it, on the app's internal network
 
      zerotwo-nginx:
        image: nginx:alpine
@@ -102,27 +102,27 @@ with your pool name everywhere below.
    ```sh
    curl http://192.168.1.83:30080/api/health           # -> {"ok":true}
    ```
-   Don't port-forward `30080` to the internet — the public path is the tunnel in
+   Don't port-forward `30080` to the internet  -  the public path is the tunnel in
    Part C. (`CF-Connecting-IP` trust assumes the only public ingress is the proxy.)
 
 If you'd rather skip nginx, you can run only `zerotwo-api` and point the tunnel
-straight at it — Node still enforces per-IP/day + honeypot + caps. nginx just adds
+straight at it  -  Node still enforces per-IP/day + honeypot + caps. nginx just adds
 edge `limit_req` flood-absorption (recommended).
 
 ---
 
-## Part C — Expose it publicly with Cloudflare Tunnel (recommended)
+## Part C  -  Expose it publicly with Cloudflare Tunnel (recommended)
 
 No port-forwarding, no exposed home IP, free TLS.
 
 1. **Move the domain's DNS to Cloudflare** (free): add the site at
    dash.cloudflare.com, then change the nameservers at your registrar to the two
-   Cloudflare gives you. Your SiteGround site keeps working — just make sure an
+   Cloudflare gives you. Your SiteGround site keeps working  -  just make sure an
    `A`/`CNAME` record for the root/`www` points at SiteGround (set it **DNS only**,
    grey cloud, so SiteGround's own HTTPS handles the page).
 2. **Create a tunnel:** Cloudflare **Zero Trust → Networks → Tunnels → Create a
    tunnel** (type *Cloudflared*). Copy the **tunnel token**.
-3. **Run cloudflared on TrueNAS** — add a third service to the same Custom App
+3. **Run cloudflared on TrueNAS**  -  add a third service to the same Custom App
    (Edit the app's YAML):
    ```yaml
      cloudflared:
@@ -134,7 +134,7 @@ No port-forwarding, no exposed home IP, free TLS.
 4. **Add a Public Hostname** to the tunnel (in the Cloudflare dashboard):
    - **Subdomain:** `api` · **Domain:** `zerotwosystems.nl`
    - **Service:** `http://zerotwo-nginx:80`  (same app network)
-     — or `http://192.168.1.83:30080` if you prefer.
+      -  or `http://192.168.1.83:30080` if you prefer.
 
    Cloudflare auto-creates the `api.zerotwosystems.nl` DNS record.
 
@@ -145,7 +145,7 @@ No port-forwarding, no exposed home IP, free TLS.
 
 ---
 
-## Part D — Verify end to end
+## Part D  -  Verify end to end
 
 ```sh
 # health, through the public URL
@@ -164,7 +164,7 @@ Then on the live page:
 2. Unlock (click **LOCKED** → enter your passphrase) → **INBOX** shows the request
    with the real visitor IP; approve/deny/delete works.
 
-If the panel still says **demo mode**, the page can't reach the API — re-check the
+If the panel still says **demo mode**, the page can't reach the API  -  re-check the
 `<meta>` URL, that `CORS_ORIGIN` exactly matches the page's origin (scheme + host,
 no trailing slash), and that `https://api…/api/health` works.
 
@@ -174,13 +174,13 @@ no trailing slash), and that `https://api…/api/health` works.
 
 - **Operator key in two places.** The dashboard's `OPERATOR_KEY_SHA256` (in the
   HTML) and the backend's `OPERATOR_KEY_SHA256` env must be the **same hash**, or
-  the inbox won't authenticate. Default is `sha256("zerotwo")` — change both.
+  the inbox won't authenticate. Default is `sha256("zerotwo")`  -  change both.
 - **LAN service tiles will read "down" on the public page.** TrueNAS/Jellyfin/etc.
   are `http://192.168.1.83:…`; a visitor's browser can't reach your LAN, and an
   HTTPS page can't ping `http://` targets (mixed content) anyway. Use each tile's
   **force-up / hide** status option in EDIT mode for those. (Status checks are
-  browser-side by design — this is expected, not a bug.)
+  browser-side by design  -  this is expected, not a bug.)
 - **Updating the backend:** edit `server.js` on the dataset and restart the app
   (the file is mounted read-only into the container).
-- **Backups:** `…/apps/zerotwo/data/requests.json` is your request history — include
+- **Backups:** `…/apps/zerotwo/data/requests.json` is your request history  -  include
   it in your TrueNAS snapshots if you care about it.

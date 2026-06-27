@@ -1,5 +1,3 @@
-/* Compact SHA-256 (geraintluff, public domain) — works without a secure context.
-   Exposed as window.sha256hex(str) -> lowercase hex digest. UTF-8 safe. */
 (function () {
   function sha256(ascii) {
     function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }

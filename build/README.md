@@ -1,7 +1,7 @@
-# build/ — regenerate `index.html`
+# build/  -  regenerate `index.html`
 
 You only need this folder if you want to **edit the dashboard's source** and
-rebuild the single-file output. For day-to-day use you can ignore it — tiles,
+rebuild the single-file output. For day-to-day use you can ignore it  -  tiles,
 logos, and the operator passphrase are all editable in-page, and the shipped
 `../index.html` already contains everything.
 
@@ -11,7 +11,7 @@ The dashboard is authored as small React components in `src/`. This tooling
 precompiles the JSX (Babel, classic runtime → `React.createElement`) and inlines
 the result **plus React's production build and the CSS** into one self-contained
 HTML file at the project root. The output has **no CDN dependency and no
-in-browser transpilation** — it just runs.
+in-browser transpilation**  -  it just runs.
 
 ## Usage
 

@@ -1,4 +1,4 @@
-# build tooling — regenerable, never commit
+# build tooling  -  regenerable, never commit
 build/node_modules/
 build/compiled/
 

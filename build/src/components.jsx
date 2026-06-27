@@ -1,11 +1,6 @@
-/* ============================================================
-   ZeroTwo Systems — UI components
-   Exposes components on window for app.jsx
-   ============================================================ */
 
 const { useState, useEffect, useRef, useCallback } = React;
 
-/* ---- helpers ---- */
 function hostOf(url) {
   try {
     const u = new URL(url);
@@ -26,14 +21,7 @@ function readImageFile(file, cb) {
   r.readAsDataURL(file);
 }
 
-/* ============================================================
-   // PERSONAL — zerotwolove.nl featured strip
-   A warm plug for the side project. Drop (or click) a Zero Two
-   pic onto the slot to set it — saved locally, operator only.
-   To bake in a permanent image instead, drop a file in assets/
-   and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
-   ============================================================ */
-const DARLING_IMG = "";                 // optional permanent image path
+const DARLING_IMG = "";
 const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
 
 function DarlingBanner({ unlocked, newTab }) {
@@ -53,7 +41,7 @@ function DarlingBanner({ unlocked, newTab }) {
     if (f) readImageFile(f, setImage);
   };
   const onShotClick = (e) => {
-    if (!unlocked) return;            // visitors just follow the link
+    if (!unlocked) return;
     e.preventDefault(); e.stopPropagation();
     fileRef.current && fileRef.current.click();
   };
@@ -97,13 +85,10 @@ function DarlingBanner({ unlocked, newTab }) {
   );
 }
 
-/* ============================================================
-   Typewriter — cycles multilingual subtitle
-   ============================================================ */
 function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
   const [idx, setIdx] = useState(0);
   const [txt, setTxt] = useState("");
-  const [phase, setPhase] = useState("type"); // type | hold | del
+  const [phase, setPhase] = useState("type");
 
   useEffect(() => {
     const cur = items[idx];
@@ -113,7 +98,7 @@ function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
       else { t = setTimeout(() => setPhase("hold"), holdMs); }
     } else if (phase === "hold") {
       t = setTimeout(() => setPhase("del"), 80);
-    } else { // del
+    } else {
       if (txt.length > 0) t = setTimeout(() => setTxt(cur.slice(0, txt.length - 1)), delMs);
       else { setIdx((idx + 1) % items.length); setPhase("type"); }
     }
@@ -128,17 +113,11 @@ function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
   );
 }
 
-/* ============================================================
-   Status dot
-   ============================================================ */
 function StatusDot({ state }) {
   const cls = state === "up" ? "up" : state === "down" ? "down" : state === "checking" ? "checking" : "off";
   return <span className={"dot " + cls} title={"status: " + (state || "off")}></span>;
 }
 
-/* ============================================================
-   Service tile
-   ============================================================ */
 function ServiceTile({ svc, status, editing, dimmed, matched, newTab, unlocked, onEdit, onDelete, onIcon }) {
   const [drag, setDrag] = useState(false);
 
@@ -192,9 +171,6 @@ function ServiceTile({ svc, status, editing, dimmed, matched, newTab, unlocked, 
   );
 }
 
-/* ============================================================
-   Edit / Add modal
-   ============================================================ */
 const BLANK = { name: "", url: "", category: "", icon: "", statusMode: "auto" };
 
 function EditModal({ initial, categories, onSave, onClose }) {
@@ -280,9 +256,6 @@ function EditModal({ initial, categories, onSave, onClose }) {
   );
 }
 
-/* ============================================================
-   Auth gate modal
-   ============================================================ */
 function AuthModal({ reason, onSubmit, onClose }) {
   const [pass, setPass] = useState("");
   const [err, setErr] = useState(false);
@@ -332,23 +305,16 @@ function AuthModal({ reason, onSubmit, onClose }) {
   );
 }
 
-/* ============================================================
-   HowItWorks — plain-language "how requesting works" explainer.
-   Fades in over the page. Written for people who aren't technical:
-   request in Seerr -> it downloads itself -> it shows up in Jellyfin.
-   A collapsed "under the hood" drawer keeps the pipeline detail out
-   of the way for the curious.
-   ============================================================ */
 const HOW_STEPS = [
   {
     n: "01", k: "ask",
     title: "Ask for it",
-    body: "Open the request portal and search for any movie or show — new releases, old favourites, a whole series. Found it? Press Request. That's the only thing you ever have to do.",
+    body: "Open the request portal and search for any movie or show  -  new releases, old favourites, a whole series. Found it? Press Request. That's the only thing you ever have to do.",
   },
   {
     n: "02", k: "fetch",
     title: "It fetches itself",
-    body: "From here it's automatic. The system goes and finds a good-quality copy, downloads it, and files it away for you. No buttons, no waiting around — you can close the tab and forget about it.",
+    body: "From here it's automatic. The system goes and finds a good-quality copy, downloads it, and files it away for you. No buttons, no waiting around  -  you can close the tab and forget about it.",
   },
   {
     n: "03", k: "watch",
@@ -378,7 +344,7 @@ function HowItWorks({ open, onClose, newTab, seerrUrl }) {
           <div className="ht">
             <span className="kw">// guide</span>
             <h2>How requesting works</h2>
-            <p>The no-jargon version — for anyone who just wants to watch something.</p>
+            <p>The no-jargon version  -  for anyone who just wants to watch something.</p>
           </div>
           <span className="x" onClick={onClose} title="close">✕</span>
         </div>
@@ -386,7 +352,7 @@ function HowItWorks({ open, onClose, newTab, seerrUrl }) {
         <div className="how-body">
           <p className="how-intro">
             Want to watch something that isn't in the library yet? You don't have to message
-            anyone. Just <b>request it</b> — here's the whole journey, start to finish.
+            anyone. Just <b>request it</b>  -  here's the whole journey, start to finish.
           </p>
 
           <div className="how-steps">
@@ -407,22 +373,22 @@ function HowItWorks({ open, onClose, newTab, seerrUrl }) {
           <div className="how-know">
             <span className="kh">good to know</span>
             <ul>
-              <li>One request covers the whole thing — ask for a series and you get every season and episode.</li>
-              <li>You always watch in <b>Jellyfin</b>. The request portal is just your wishlist — it doesn't play anything itself.</li>
-              <li>If someone already requested it, it'll simply show as available — no harm in asking twice.</li>
+              <li>One request covers the whole thing  -  ask for a series and you get every season and episode.</li>
+              <li>You always watch in <b>Jellyfin</b>. The request portal is just your wishlist  -  it doesn't play anything itself.</li>
+              <li>If someone already requested it, it'll simply show as available  -  no harm in asking twice.</li>
             </ul>
           </div>
 
           <div className="how-under">
             <button className={"hu-toggle" + (more ? " on" : "")} onClick={() => setMore((v) => !v)}>
-              <span className="chev">{more ? "▾" : "▸"}</span> under the hood — for the curious
+              <span className="chev">{more ? "▾" : "▸"}</span> under the hood  -  for the curious
             </button>
             {more && (
               <div className="hu-body">
                 <p>
                   Seerr hands your request to <b>Radarr</b> (films) or <b>Sonarr</b> (TV). They search
-                  <b> nzbgeek</b> for a release, then <b>NZBGet</b> pulls it down over <b>Newshosting</b> —
-                  or <b>qBittorrent</b> grabs a torrent — and drops the file into the library Jellyfin reads from.
+                  <b> nzbgeek</b> for a release, then <b>NZBGet</b> pulls it down over <b>Newshosting</b>  -
+                  or <b>qBittorrent</b> grabs a torrent  -  and drops the file into the library Jellyfin reads from.
                 </p>
                 <div className="hu-chain">
                   <span>Seerr</span><i>→</i><span>Radarr / Sonarr</span><i>→</i><span>nzbgeek</span><i>→</i><span>NZBGet · Newshosting</span><i>→</i><span className="end">Jellyfin</span>

@@ -1,12 +1,12 @@
-# ZeroTwo Systems — request backend
+# ZeroTwo Systems  -  request backend
 
 A tiny, zero-dependency Node service that powers the dashboard's **Request access**
 panel and the operator **inbox**. It is what actually makes "one request per day,
-no botting, no crashing" *true* — the in-page limit is only a soft deterrent.
+no botting, no crashing" *true*  -  the in-page limit is only a soft deterrent.
 
 ## What it guarantees
 
-- **One request per IP per rolling 24 hours** — enforced server-side (the browser
+- **One request per IP per rolling 24 hours**  -  enforced server-side (the browser
   can't fake or clear this).
 - **Bots can't flood it:** nginx `limit_req` drops a flood at the edge before it
   reaches Node; the app also rejects a filled honeypot field and forms submitted

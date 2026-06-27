@@ -1,7 +1,3 @@
-/* ============================================================
-   ZeroTwo Systems — interactive console
-   Quake-style drop-down terminal that drives the dashboard.
-   ============================================================ */
 
 const { useState, useEffect, useRef, useCallback } = React;
 
@@ -41,7 +37,6 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
   const push = useCallback((node) => setLines((p) => [...p, { id: idRef.current++, node }]), []);
   const line = useCallback((content, cls) => push(<div className={"term-line " + (cls || "")}>{content}</div>), [push]);
 
-  /* autoscroll + focus */
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [lines]);
@@ -49,7 +44,6 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
     if (open && inputRef.current) setTimeout(() => inputRef.current && inputRef.current.focus(), 60);
   }, [open]);
 
-  /* ---- service matching ---- */
   const findSvc = (arg) => {
     if (!arg) return null;
     if (/^\d+$/.test(arg)) return services[parseInt(arg, 10) - 1] || null;
@@ -60,7 +54,6 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
   const stCls = (st) => "l-" + (st === "up" ? "up" : st === "down" ? "down" : st === "checking" ? "amber" : "off");
   const stTxt = (st) => st === "up" ? "● UP" : st === "down" ? "○ DOWN" : st === "checking" ? "◌ ····" : "· off";
 
-  /* ---- commands ---- */
   const neofetch = () => {
     const up = services.filter((s) => statusOf(s) === "up").length;
     const tracked = services.filter((s) => s.statusMode !== "off").length;
@@ -220,7 +213,7 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
         break;
 
       case "about":
-        line("ZeroTwo Systems — HomeLab Nexus", "l-sys");
+        line("ZeroTwo Systems  -  HomeLab Nexus", "l-sys");
         line(<span className="l-dim">a single-file start page served from your nginx root. green-on-black, because of course.</span>);
         break;
 
@@ -274,7 +267,6 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
     }
   };
 
-  /* ---- input handling ---- */
   const onKeyDown = (e) => {
     if (e.key === "Enter") {
       run(input);
