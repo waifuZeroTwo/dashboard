@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/* Assemble the ZeroTwo dashboard into ONE self-contained HTML file.
- * Inlines: terminal.css, React+ReactDOM (production UMD), sha256.js, and the
- * Babel-compiled component scripts (classic runtime -> React.createElement).
- * No CDN, no in-browser Babel, no build step required to deploy the output. */
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -12,24 +8,12 @@ const OUT = path.join(ROOT, "..", "index.html");
 
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
-// Defensive: a literal </script> inside inlined JS would close the tag early.
-// Escaping the slash is valid inside any JS string/regex/comment (the only
-// places the sequence can legally appear).
-const safeJs = (s) => s.replace(/<\/script/gi, "<\\/script");
+const stripBlockComments = (s) => s.replace(/^(\s*\/\*[\s\S]*?\*\/\s*)+/, "").replace(/\/\*\n[\s\S]*?\n\*\//g, "");
+const safeJs = (s) => stripBlockComments(s).replace(/<\/script/gi, "<\\/script");
 
 const css = read("src/terminal.css");
-if (/<\/style/i.test(css)) throw new Error("CSS contains </style> — would break the <style> tag");
+if (/<\/style/i.test(css)) throw new Error("CSS contains </style>  -  would break the <style> tag");
 
-// Load order matches the original HTML: react, react-dom, sha256, components,
-// requests, terminal, app.
-//
-// `wrap` = true puts the script body in its own IIFE. The component files each
-// open with `const { useState, ... } = React;` at top level. As separate inline
-// <script>s they would share one global lexical scope and collide ("Identifier
-// already declared"); the original prototype avoided this because Babel-standalone
-// runs each text/babel script in its own scope. Wrapping reproduces that. All
-// cross-file symbols are shared via `Object.assign(window, …)`, so this is safe.
-// React/ReactDOM (UMD, self-wrapping) and sha256 (already an IIFE) are left as-is.
 const scripts = [
   ["react 18.3.1 (production umd)",       read("node_modules/react/umd/react.production.min.js"),    false],
   ["react-dom 18.3.1 (production umd)",    read("node_modules/react-dom/umd/react-dom.production.min.js"), false],
@@ -51,18 +35,9 @@ parts.push('<html lang="en">');
 parts.push("<head>");
 parts.push('  <meta charset="UTF-8" />');
 parts.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0" />');
-parts.push("  <title>ZeroTwo Systems — HomeLab Nexus</title>");
+parts.push("  <title>ZeroTwo Systems  -  HomeLab Nexus</title>");
 parts.push("");
-parts.push("  <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this");
-parts.push("       page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the");
-parts.push('       backend\'s public base URL, e.g. content="https://api.zerotwosystems.nl". Leave');
-parts.push("       empty when the same server serves both this page and /api/. -->");
 parts.push('  <meta name="zerotwo-api-base" content="" />');
-parts.push("");
-parts.push("  <!-- Single self-contained build. Drop index.html into your nginx web root.");
-parts.push("       The request system's per-IP/day limit");
-parts.push("       is enforced by backend/ (see README.md); without it the request panel runs");
-parts.push("       in a clearly-labelled demo mode. -->");
 parts.push("");
 parts.push('  <link rel="preconnect" href="https://fonts.googleapis.com" />');
 parts.push('  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />');
@@ -82,7 +57,6 @@ parts.push('  <div id="root"></div>');
 parts.push("");
 for (const [label, code, wrap] of scripts) {
   const body = safeJs(code).trimEnd();
-  parts.push("  <!-- " + label + " -->");
   parts.push("  <script>");
   if (wrap) {
     parts.push("(function () {");

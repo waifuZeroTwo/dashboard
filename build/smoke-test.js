@@ -16,7 +16,6 @@ const dom = new JSDOM(html, {
   url: "https://zerotwosystems.com/",
   virtualConsole: vc,
   beforeParse(window) {
-    // Stub fetch so status pings resolve to "down" rather than throwing.
     window.fetch = () => Promise.reject(new Error("no-net (smoke test)"));
   },
 });
@@ -52,7 +51,6 @@ setTimeout(() => {
   for (const [k, v] of Object.entries(checks)) { console.log((v ? "  PASS  " : "  FAIL  ") + k); if (!v) ok = false; }
   console.log("\n  tiles rendered: " + doc.querySelectorAll(".tile").length);
 
-  // sha256("zerotwo") must equal the baked operator-key hash
   const want = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
   const got = typeof dom.window.sha256hex === "function" ? dom.window.sha256hex("zerotwo") : "(no fn)";
   const hashOk = got === want;

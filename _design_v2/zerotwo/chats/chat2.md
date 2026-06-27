@@ -90,7 +90,7 @@ The media queries ARE applying (topbar `flex-wrap: wrap` at 390px). The screensh
 
 _[tool: eval_js]_
 
-Excellent — zero horizontal overflow, single-column grid, topbar wrapping correctly. Let me confirm the 360px frame and button tap-target heights.
+Excellent  -  zero horizontal overflow, single-column grid, topbar wrapping correctly. Let me confirm the 360px frame and button tap-target heights.
 
 _[tool: delete_file]_
 
@@ -100,9 +100,9 @@ _[tool: done]_
 
 _[tool: fork_verifier_agent]_
 
-Done — the dashboard is now fully responsive. I verified it live at 390px and 360px widths.
+Done  -  the dashboard is now fully responsive. I verified it live at 390px and 360px widths.
 
-**What changed (CSS-only, plus tiny class hooks in the topbar — no behavior touched):**
+**What changed (CSS-only, plus tiny class hooks in the topbar  -  no behavior touched):**
 - **Topbar** wraps cleanly on phones: brand + clock share the top row, the node-count gets its own line, and `request / lock / terminal / edit` become full-width 40px tap targets. Date and the `│` separators hide to save space; on very narrow phones (<380px) the clock drops too.
 - **Tiles** collapse to a single clean column; grid eases down on tablets first.
 - **Search** input bumped to 16px so iOS doesn't zoom on focus, and the keyboard-only hints (`/ focus`, `↵ launch`) hide on touch.

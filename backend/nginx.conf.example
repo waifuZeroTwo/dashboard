@@ -1,11 +1,4 @@
-# ===========================================================================
-# ZeroTwo Systems — nginx config (example)
-# Serves the static dashboard AND proxies /api/ to the request backend,
-# with edge rate-limiting so a flood is absorbed BEFORE it reaches Node.
-# ===========================================================================
 
-# --- rate-limit zones (put these in the http{} block, not inside server{}) ---
-# 1 request/sec average with a small burst is plenty for a human form.
 limit_req_zone  $binary_remote_addr  zone=req_submit:10m  rate=1r/s;
 limit_req_zone  $binary_remote_addr  zone=general:10m     rate=20r/s;
 limit_conn_zone $binary_remote_addr  zone=conns:10m;
@@ -14,22 +7,17 @@ server {
     listen 443 ssl http2;
     server_name zerotwosystems.com;          # <-- your domain
 
-    # ssl_certificate     /etc/letsencrypt/live/zerotwosystems.com/fullchain.pem;
-    # ssl_certificate_key /etc/letsencrypt/live/zerotwosystems.com/privkey.pem;
 
     root /var/www/zerotwo;                    # <-- folder holding the dashboard
     index index.html;
 
-    # global soft cap on concurrent connections per IP
     limit_conn conns 20;
 
-    # ---- static dashboard (public) ----
     location / {
         limit_req zone=general burst=40 nodelay;
         try_files $uri $uri/ =404;
     }
 
-    # ---- account-request submit (public, HARD rate-limited) ----
     location = /api/request {
         limit_req               zone=req_submit burst=5 nodelay; # flood control at the edge
         limit_except POST OPTIONS { deny all; }                  # OPTIONS = CORS preflight (split hosting)
@@ -42,12 +30,8 @@ server {
         proxy_read_timeout 10s;
     }
 
-    # ---- operator endpoints (auth handled by the backend via Bearer key) ----
-    # Optional extra wall: uncomment auth_basic to require an nginx login too.
     location /api/ {
         limit_req zone=general burst=10 nodelay;
-        # auth_basic           "ZeroTwo Operator";
-        # auth_basic_user_file /etc/nginx/.htpasswd;
         client_max_body_size 4k;
         proxy_pass         http://127.0.0.1:8787;
         proxy_set_header   X-Real-IP $remote_addr;
@@ -56,7 +40,6 @@ server {
     }
 }
 
-# Optional: redirect http -> https
 server {
     listen 80;
     server_name zerotwosystems.com;

@@ -1,11 +1,6 @@
-/* ============================================================
-   ZeroTwo Systems — UI components
-   Exposes components on window for app.jsx
-   ============================================================ */
 
 const { useState, useEffect, useRef, useCallback } = React;
 
-/* ---- helpers ---- */
 function hostOf(url) {
   try {
     const u = new URL(url);
@@ -26,9 +21,6 @@ function readImageFile(file, cb) {
   r.readAsDataURL(file);
 }
 
-/* ============================================================
-   Typewriter — cycles multilingual subtitle
-   ============================================================ */
 function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
   const [idx, setIdx] = useState(0);
   const [txt, setTxt] = useState("");
@@ -57,17 +49,11 @@ function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
   );
 }
 
-/* ============================================================
-   Status dot
-   ============================================================ */
 function StatusDot({ state }) {
   const cls = state === "up" ? "up" : state === "down" ? "down" : state === "checking" ? "checking" : "off";
   return <span className={"dot " + cls} title={"status: " + (state || "off")}></span>;
 }
 
-/* ============================================================
-   Service tile
-   ============================================================ */
 function ServiceTile({ svc, status, editing, dimmed, matched, newTab, unlocked, onEdit, onDelete, onIcon }) {
   const [drag, setDrag] = useState(false);
 
@@ -121,9 +107,6 @@ function ServiceTile({ svc, status, editing, dimmed, matched, newTab, unlocked, 
   );
 }
 
-/* ============================================================
-   Edit / Add modal
-   ============================================================ */
 const BLANK = { name: "", url: "", category: "", icon: "", statusMode: "auto" };
 
 function EditModal({ initial, categories, onSave, onClose }) {
@@ -209,9 +192,6 @@ function EditModal({ initial, categories, onSave, onClose }) {
   );
 }
 
-/* ============================================================
-   Auth gate modal
-   ============================================================ */
 function AuthModal({ reason, onSubmit, onClose }) {
   const [pass, setPass] = useState("");
   const [err, setErr] = useState(false);

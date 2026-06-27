@@ -1,6 +1,3 @@
-/* ============================================================
-   ZeroTwo Systems — app
-   ============================================================ */
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -8,12 +5,6 @@ const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
 
-/* --- operator key ---------------------------------------------------------
-   SHA-256 of the operator passphrase. Default passphrase is "zerotwo".
-   CHANGE IT: open the console (unlocked), run  passwd <new phrase>  and paste
-   the printed hash here. The plaintext is never stored in this file.
-   NOTE: a static page can only DETER tampering. For real enforcement put the
-   page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
 const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
 
 const TITLE_CYCLE = [
@@ -23,7 +14,6 @@ const TITLE_CYCLE = [
   "家庭实验室枢纽",
 ];
 
-/* ---- seed services (from operator config) ---- */
 const SEED = [
   { id: "plex",      name: "Plex",          category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1" },
@@ -56,7 +46,6 @@ function save(svcs) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(svcs)); } catch (e) {}
 }
 
-/* ---- status ping (best-effort, browser no-cors) ---- */
 function ping(url, timeout = 5000) {
   return new Promise((resolve) => {
     const ctrl = new AbortController();
@@ -81,7 +70,6 @@ function fmtDate(d) {
   return d.toLocaleDateString([], { weekday: "short", year: "numeric", month: "short", day: "2-digit" }).toUpperCase();
 }
 
-/* ============================================================ */
 function App() {
   const [svcs, setSvcs] = useState(load);
   const [editing, setEditing] = useState(false);
@@ -106,13 +94,11 @@ function App() {
   useEffect(() => save(svcs), [svcs]);
   useEffect(() => localStorage.setItem(NEWTAB_KEY, newTab ? "1" : "0"), [newTab]);
 
-  /* clock */
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  /* status checks */
   const runChecks = useCallback(() => {
     const targets = svcs.filter((s) => s.statusMode === "auto" || !s.statusMode);
     if (!targets.length) return;
@@ -132,7 +118,6 @@ function App() {
     return () => clearInterval(t);
   }, [runChecks]);
 
-  /* keyboard: "/" focus search, esc clears, ` toggles terminal */
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "`" && !e.ctrlKey && !e.metaKey) {
@@ -155,7 +140,6 @@ function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [modal, termOpen, unlocked]);
 
-  /* ---- derived ---- */
   const categories = useMemo(() => {
     const set = [];
     svcs.forEach((s) => { const c = (s.category || "OTHER").toUpperCase(); if (!set.includes(c)) set.push(c); });
@@ -183,7 +167,6 @@ function App() {
   const effStatus = (s) => s.statusMode === "up" ? "up" : s.statusMode === "down" ? "down" : s.statusMode === "off" ? "off" : (statuses[s.id] || "checking");
   const launch = (url) => window.open(url, newTab ? "_blank" : "_self");
 
-  /* ---- access control (client-side deterrent) ---- */
   const requireAuth = (reason, then) => {
     if (unlocked) { if (then) then(); }
     else setAuth({ reason, then: then || (() => {}) });
@@ -209,7 +192,6 @@ function App() {
     setInboxOpen(false);
   };
 
-  /* pending-request count for the operator badge */
   useEffect(() => {
     if (!unlocked) { setPendingN(0); return; }
     let alive = true;
@@ -221,7 +203,6 @@ function App() {
     return () => { alive = false; };
   }, [unlocked, inboxOpen]);
 
-  /* ---- actions ---- */
   const upsert = (svc) => {
     setSvcs((prev) => {
       const exists = prev.some((s) => s.id === svc.id);
@@ -248,7 +229,6 @@ function App() {
 
   return (
     <React.Fragment>
-      {/* top strip */}
       <div className="topbar">
         <span className="brand">ZEROTWO<b>://</b>NEXUS</span>
         <span className="sep">│</span>
@@ -261,7 +241,7 @@ function App() {
         <span
           className={"lock" + (unlocked ? " open" : "")}
           onClick={() => (unlocked ? lock() : requireAuth("operator session", () => {}))}
-          title={unlocked ? "operator authenticated — click to lock" : "locked — click to authenticate"}
+          title={unlocked ? "operator authenticated  -  click to lock" : "locked  -  click to authenticate"}
         >
           <span className="ic">{unlocked ? "◍" : "○"}</span> {unlocked ? "operator" : "locked"}
         </span>
@@ -277,17 +257,15 @@ function App() {
       </div>
 
       <div className="wrap">
-        {/* hero */}
         <header className="hero">
           <div className="eyebrow">root@zerotwo:~$ <span className="blink">./launch_nexus</span></div>
           <h1>ZeroTwo Systems</h1>
           <Typewriter items={TITLE_CYCLE} />
           <div className="greeting">
             <span className="prompt">&gt;</span> {greetWord(hour)}, <span className="hl">operator</span>
-            {" "}— {onlineCount} of {tracked} services responding. systems nominal.
+            {" "} -  {onlineCount} of {tracked} services responding. systems nominal.
           </div>
 
-          {/* search */}
           <form className="search" onSubmit={submitSearch}>
             <span className="sigil">▮</span>
             <input
@@ -307,7 +285,6 @@ function App() {
           </form>
         </header>
 
-        {/* categories */}
         {categories.map((cat) => {
           const list = svcs.filter((s) => (s.category || "OTHER").toUpperCase() === cat);
           const visible = query ? list.filter(isMatch) : list;
@@ -343,14 +320,12 @@ function App() {
           );
         })}
 
-        {/* global add when editing (new category) */}
         {editing && !query && (
           <div style={{ marginTop: 28 }}>
             <button className="btn" onClick={() => setModal({ new: true })}>+ new node / category</button>
           </div>
         )}
 
-        {/* no matches */}
         {query && matches.length === 0 && (
           <div className="no-match">
             no service matches “{q}”.&nbsp;
@@ -360,7 +335,6 @@ function App() {
           </div>
         )}
 
-        {/* footer */}
         <footer className="foot">
           <span className="green">zerotwo.nexus</span>
           <span>v1.0</span>
@@ -372,7 +346,6 @@ function App() {
         </footer>
       </div>
 
-      {/* modal */}
       {modal && (
         <EditModal
           initial={modal.svc || null}
@@ -383,7 +356,6 @@ function App() {
         />
       )}
 
-      {/* console */}
       <Terminal
         open={termOpen}
         onClose={() => setTermOpen(false)}
@@ -400,10 +372,8 @@ function App() {
         bootTime={bootRef.current}
       />
 
-      {/* request panel (public) */}
       <RequestPanel open={reqOpen} onClose={() => setReqOpen(false)} />
 
-      {/* operator inbox (gated) */}
       <OperatorRequests
         open={inboxOpen}
         operatorKey={operatorKeyRef.current}
@@ -411,7 +381,6 @@ function App() {
         onCount={setPendingN}
       />
 
-      {/* auth gate */}
       {auth && (
         <AuthModal
           reason={auth.reason}

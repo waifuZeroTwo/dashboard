@@ -1,25 +1,4 @@
 #!/usr/bin/env node
-/* ============================================================================
- * ZeroTwo Systems — account-request backend (zero dependencies)
- * ----------------------------------------------------------------------------
- * A tiny HTTP service that:
- *   - accepts POST /api/request from the public dashboard
- *   - enforces ONE request per IP per rolling 24h (the real guarantee)
- *   - blocks bots: honeypot field, minimum form time, strict size/field caps
- *   - caps total pending requests so disk can never be filled
- *   - exposes GET /api/requests and POST /api/request/resolve for the operator,
- *     authenticated by the SHA-256 of the operator passphrase (same hash the
- *     dashboard uses) — no plaintext stored anywhere
- *
- * Run it on localhost behind nginx (see nginx.conf.example). nginx terminates
- * TLS, applies edge rate-limiting (limit_req) so a flood never reaches Node,
- * and forwards the real client IP via X-Real-IP.
- *
- *   OPERATOR_KEY_SHA256=<hash> PORT=8787 DATA_DIR=./data node server.js
- *
- * Generate the hash with:  printf '%s' 'your passphrase' | shasum -a 256
- * (or run `passwd <phrase>` in the dashboard console).
- * ========================================================================== */
 
 "use strict";
 const http = require("http");
@@ -27,12 +6,10 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
-// ---- config ----------------------------------------------------------------
 const PORT = parseInt(process.env.PORT || "8787", 10);
 const HOST = process.env.HOST || "127.0.0.1";
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const OPERATOR_KEY_SHA256 = (process.env.OPERATOR_KEY_SHA256 ||
-  // default = sha256("zerotwo"); CHANGE THIS via env var in production
   "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea").toLowerCase();
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -43,11 +20,6 @@ const MIN_FORM_MS = 1200;           // submitted faster than this == bot
 const ALLOWED_SERVICES = ["jellyfin", "plex", "seerr", "immich", "navidrome", "nextcloud"];
 const LIMITS = { username: 60, contact: 80, referral: 200, note: 500 };
 
-// CORS: comma-separated list of page origins allowed to call this API from a
-// browser. Needed only for SPLIT hosting (page and backend on different hosts,
-// e.g. page on SiteGround, this backend on TrueNAS). Empty = same-origin only,
-// no CORS headers emitted.
-//   CORS_ORIGIN="https://zerotwosystems.nl,https://zerotwosystems.com"
 const CORS_ORIGINS = (process.env.CORS_ORIGIN || "")
   .split(",").map((s) => s.trim()).filter(Boolean);
 function corsHeaders(req) {
@@ -62,7 +34,6 @@ function corsHeaders(req) {
   };
 }
 
-// ---- storage (flat JSON files, atomic writes) ------------------------------
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const REQ_FILE = path.join(DATA_DIR, "requests.json");
 const RATE_FILE = path.join(DATA_DIR, "ratelimit.json");
@@ -79,7 +50,6 @@ function saveJSON(file, data) {
 let requests = loadJSON(REQ_FILE, []);  // [{id, service, username, contact, referral, note, ip, ts, status}]
 let rate = loadJSON(RATE_FILE, {});     // { "<ipHash>": lastTs }
 
-// periodically prune old rate entries so the map can't grow unbounded
 function pruneRate() {
   const now = Date.now();
   let changed = false;
@@ -90,12 +60,7 @@ function pruneRate() {
 }
 setInterval(pruneRate, 60 * 60 * 1000).unref();
 
-// ---- helpers ---------------------------------------------------------------
 function clientIP(req) {
-  // Behind a tunnel/proxy the real visitor IP is in a forwarded header, NOT the
-  // socket. Without this the per-IP/day limit would see every visitor as the
-  // tunnel and collapse to a single shared bucket. Trust these only because the
-  // backend is reachable solely through your proxy (don't also expose :8787).
   const cf = req.headers["cf-connecting-ip"];      // Cloudflare Tunnel / proxy
   if (cf) return String(cf).trim();
   const xr = req.headers["x-real-ip"];             // nginx proxy_set_header
@@ -119,7 +84,6 @@ function authed(req) {
   const token = h.startsWith("Bearer ") ? h.slice(7) : "";
   if (!token) return false;
   const hash = crypto.createHash("sha256").update(token).digest("hex");
-  // constant-time compare
   const a = Buffer.from(hash);
   const b = Buffer.from(OPERATOR_KEY_SHA256);
   return a.length === b.length && crypto.timingSafeEqual(a, b);
@@ -139,7 +103,6 @@ function readBody(req) {
 }
 function str(v, max) { return (typeof v === "string" ? v : "").trim().slice(0, max); }
 
-// ---- handlers --------------------------------------------------------------
 async function handleSubmit(req, res) {
   let raw;
   try { raw = await readBody(req); } catch (e) { return send(res, 413, { ok: false, error: "too_large" }); }
@@ -147,24 +110,20 @@ async function handleSubmit(req, res) {
   let body;
   try { body = JSON.parse(raw || "{}"); } catch (e) { return send(res, 400, { ok: false, error: "bad_json" }); }
 
-  // bot traps — look like success, store nothing
   if (str(body.website, 100)) return send(res, 200, { ok: true });           // honeypot filled
   if (typeof body.elapsed === "number" && body.elapsed < MIN_FORM_MS)
     return send(res, 200, { ok: true });                                     // submitted too fast
 
-  // validate
   const service = str(body.service, 30).toLowerCase();
   if (!ALLOWED_SERVICES.includes(service)) return send(res, 400, { ok: false, error: "bad_service" });
   const username = str(body.username, LIMITS.username);
   const contact = str(body.contact, LIMITS.contact);
   if (!username || !contact) return send(res, 400, { ok: false, error: "missing_fields" });
 
-  // capacity guard (never let the store grow without bound)
   const pending = requests.filter((r) => r.status === "pending").length;
   if (pending >= MAX_PENDING || requests.length >= MAX_TOTAL)
     return send(res, 503, { ok: false, error: "queue_full" });
 
-  // per-IP rolling 24h limit — THE real enforcement
   const ip = clientIP(req);
   const key = ipHash(ip);
   const now = Date.now();
@@ -211,10 +170,7 @@ async function handleResolve(req, res) {
   return send(res, 200, { ok: true });
 }
 
-// ---- router ----------------------------------------------------------------
 const server = http.createServer((req, res) => {
-  // CORS for split static-page + remote-backend hosting (no-op when CORS_ORIGIN unset).
-  // setHeader values survive the writeHead() in send() — they use different header names.
   for (const [k, v] of Object.entries(corsHeaders(req))) res.setHeader(k, v);
   if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
 

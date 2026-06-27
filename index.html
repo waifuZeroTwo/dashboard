@@ -3,18 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZeroTwo Systems — HomeLab Nexus</title>
+  <title>ZeroTwo Systems  -  HomeLab Nexus</title>
 
-  <!-- Split-hosting only: if the request backend lives on a DIFFERENT host than this
-       page (e.g. page on SiteGround, backend on your TrueNAS box), set content to the
-       backend's public base URL, e.g. content="https://api.zerotwosystems.nl". Leave
-       empty when the same server serves both this page and /api/. -->
   <meta name="zerotwo-api-base" content="" />
-
-  <!-- Single self-contained build. Drop index.html into your nginx web root.
-       The request system's per-IP/day limit
-       is enforced by backend/ (see README.md); without it the request panel runs
-       in a clearly-labelled demo mode. -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,10 +14,6 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23060a08'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%234af0a9' text-anchor='middle'%3E02%3C/text%3E%3C/svg%3E" />
 
   <style>
-/* ============================================================
-   ZeroTwo Systems — HomeLab Nexus
-   CRT phosphor terminal theme
-   ============================================================ */
 
 :root {
   --bg:        #060a08;
@@ -35,10 +22,10 @@
   --panel-2:   #0e1813;
   --line:      rgba(74, 240, 169, 0.16);
   --line-2:    rgba(74, 240, 169, 0.30);
-  --green:     #4af0a9;   /* primary phosphor */
+  --green:     #4af0a9;
   --green-hi:  #79ffc6;
   --green-dim: #2f9a6c;
-  --ink:       #bdf6dc;   /* readable body text (green-white) */
+  --ink:       #bdf6dc;
   --muted:     #5f836f;
   --amber:     #f2c14e;
   --red:       #ff5f56;
@@ -48,7 +35,6 @@
   --intl: "Noto Sans JP", "Noto Sans SC", "Noto Sans Devanagari", var(--mono);
 }
 
-* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
@@ -69,7 +55,6 @@ body {
     var(--bg);
 }
 
-/* ---- CRT overlays ---- */
 .crt-scanlines,
 .crt-vignette {
   position: fixed;
@@ -101,22 +86,17 @@ body {
 
 ::selection { background: rgba(74,240,169,0.28); color: var(--green-hi); }
 
-/* scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: rgba(74,240,169,0.18); border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: rgba(74,240,169,0.32); }
 
-/* ============================================================
-   Layout shell
-   ============================================================ */
 .wrap {
   max-width: 1180px;
   margin: 0 auto;
   padding: 0 28px 80px;
 }
 
-/* ---- Top status strip ---- */
 .topbar {
   display: flex;
   align-items: center;
@@ -165,7 +145,6 @@ body {
 .btn.on { color: var(--bg); background: var(--green); border-color: var(--green); text-shadow: none; box-shadow: var(--glow); }
 .btn.danger:hover { color: var(--red); border-color: rgba(255,95,86,0.5); box-shadow: 0 0 12px rgba(255,95,86,0.18); }
 
-/* ---- Hero ---- */
 .hero {
   padding: 56px 0 30px;
   border-bottom: 1px dashed var(--line);
@@ -216,7 +195,6 @@ body {
 .greeting .prompt { color: var(--green); }
 .greeting .hl { color: var(--ink); }
 
-/* ---- Search ---- */
 .search {
   display: flex;
   align-items: center;
@@ -249,9 +227,6 @@ body {
   font-size: 11px;
 }
 
-/* ============================================================
-   Category + tiles
-   ============================================================ */
 .cat { margin-top: 40px; }
 .cat-head {
   display: flex;
@@ -282,7 +257,6 @@ body {
   gap: 14px;
 }
 
-/* ---- Service tile ---- */
 .tile {
   position: relative;
   display: flex;
@@ -371,7 +345,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* status dot */
 .dot {
   position: absolute;
   top: 13px;
@@ -387,7 +360,6 @@ body {
 .dot.off  { background: #2a3a31; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-/* edit controls on tile */
 .tile .edit-tools {
   position: absolute;
   top: 10px;
@@ -407,7 +379,6 @@ body {
 .tile .edit-tools button:hover { color: var(--green-hi); border-color: var(--line-2); }
 .tile .edit-tools button.del:hover { color: var(--red); border-color: rgba(255,95,86,0.5); }
 
-/* add tile */
 .tile.add {
   cursor: pointer;
   justify-content: center;
@@ -420,9 +391,6 @@ body {
 }
 .tile.add:hover { color: var(--green-hi); border-color: var(--line-2); box-shadow: var(--glow-soft); }
 
-/* ============================================================
-   Modal
-   ============================================================ */
 .modal-back {
   position: fixed;
   inset: 0;
@@ -521,7 +489,6 @@ body {
 }
 .statuspick button.sel { color: var(--green-hi); border-color: var(--line-2); box-shadow: var(--glow-soft); }
 
-/* auth gate */
 .modal.auth { width: min(440px, 100%); }
 .auth-note { color: var(--muted); font-size: 13px; line-height: 1.6; }
 .auth-note .l { color: var(--green); text-shadow: var(--glow); }
@@ -536,7 +503,6 @@ body {
 }
 .modal.shake { animation: shake 0.4s ease; }
 
-/* topbar lock indicator */
 .lock {
   display: inline-flex;
   align-items: center;
@@ -556,9 +522,6 @@ body {
 .lock.open { color: var(--green); border-color: var(--line-2); text-shadow: var(--glow); }
 .lock.open .ic { color: var(--green); }
 
-/* ============================================================
-   Slide-over sheet (request panel + operator inbox)
-   ============================================================ */
 .sheet-back {
   position: fixed;
   inset: 0;
@@ -622,7 +585,6 @@ body {
 .field .err-msg { color: var(--red); font-size: 11px; margin-top: 6px; }
 .honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
-/* once-per-day notice */
 .notice {
   border: 1px solid rgba(242, 193, 78, 0.4);
   background: rgba(242, 193, 78, 0.06);
@@ -646,19 +608,16 @@ body {
   padding: 3px 7px;
 }
 
-/* request success state */
 .req-done { text-align: center; padding: 30px 12px; }
 .req-done .big { font-size: 40px; color: var(--green); text-shadow: var(--glow); }
 .req-done h3 { color: var(--green-hi); margin: 14px 0 8px; font-size: 18px; letter-spacing: 0.02em; }
 .req-done p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; }
 .req-done .when { color: var(--amber); margin-top: 12px; font-size: 12px; }
 
-/* rate-blocked state */
 .req-block { border-color: rgba(255,95,86,0.4); background: rgba(255,95,86,0.05); }
 .req-block .nh { color: var(--red); }
 .req-block b { color: var(--red); }
 
-/* operator request cards */
 .req-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 10px; }
 .req-card {
   border: 1px solid var(--line);
@@ -699,7 +658,6 @@ body {
 .btn.req-cta { color: var(--green-hi); border-color: var(--line-2); }
 .btn.req-cta:hover { background: rgba(74,240,169,0.1); box-shadow: var(--glow-soft); }
 
-/* footer */
 .foot {
   margin-top: 60px;
   padding-top: 18px;
@@ -715,7 +673,6 @@ body {
 
 .hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-/* empty filter state */
 .no-match {
   padding: 30px 0;
   color: var(--muted);
@@ -723,9 +680,6 @@ body {
 }
 .no-match .g { color: var(--green); cursor: pointer; text-decoration: underline; }
 
-/* ============================================================
-   Interactive console (drop-down terminal)
-   ============================================================ */
 .term {
   position: fixed;
   left: 0; right: 0; bottom: 0;
@@ -811,9 +765,6 @@ body {
 }
 .term-input-row input::placeholder { color: var(--muted); }
 
-/* ============================================================
-   Responsive polish
-   ============================================================ */
 html {
   min-height: 100%;
   overflow-x: hidden;
@@ -1034,11 +985,6 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
   .tile .name .caret { opacity: 1; transform: none; }
 }
 
-/* ============================================================
-   // PERSONAL — zerotwolove.nl featured strip
-   A warm side-project banner. A single pink accent that only
-   blooms on hover, so it never competes with the green nexus.
-   ============================================================ */
 :root {
   --pink:      #ff6fa5;
   --pink-hi:   #ff9ec6;
@@ -1076,7 +1022,6 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 }
 .promo-banner:hover::before { opacity: 1; }
 
-/* image slot (drop / click a Zero Two pic — operator only) */
 .promo-banner .shot {
   position: relative;
   flex: 0 0 auto;
@@ -1168,17 +1113,12 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
   .promo-banner .b-title { font-size: 18px; }
 }
 
-/* ---- terminal easter-egg: the `zerotwo` payoff ---- */
 .zt-heart { color: var(--pink); text-shadow: 0 0 9px rgba(255, 111, 165, 0.5); }
 .zt-hi { color: var(--pink-hi); }
 .term-link.zt-link, .zt-link { color: var(--pink); text-decoration: underline; cursor: pointer; }
 .term-link.zt-link:hover, .zt-link:hover { color: var(--pink-hi); }
 
-/* ============================================================
-   How-requesting-works — discreet trigger + fade-in explainer
-   ============================================================ */
 
-/* discreet trigger that sits above the service grid */
 .howto-trigger {
   display: inline-flex;
   align-items: center;
@@ -1217,7 +1157,6 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 .howto-trigger .arr { color: var(--green-dim); transition: transform 0.16s ease; }
 .howto-trigger:hover .arr { transform: translateX(3px); color: var(--green-hi); }
 
-/* fade-in backdrop (kept mounted so it fades both ways) */
 .how-back {
   position: fixed;
   inset: 0;
@@ -1283,7 +1222,6 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 }
 .how-intro b { color: var(--green-hi); }
 
-/* numbered step flow */
 .how-steps { display: flex; flex-direction: column; }
 .how-step { display: flex; gap: 18px; }
 .how-step .rail {
@@ -1324,7 +1262,6 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 }
 .how-step .step-body p { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.6; }
 
-/* good-to-know box */
 .how-know {
   margin-top: 6px;
   border: 1px solid var(--line);
@@ -1345,7 +1282,6 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 .how-know li::marker { color: var(--green-dim); }
 .how-know b { color: var(--green-hi); }
 
-/* under-the-hood drawer */
 .how-under { margin-top: 18px; }
 .how-under .hu-toggle {
   display: inline-flex;
@@ -1416,17 +1352,7 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
 
   <div id="root"></div>
 
-  <!-- react 18.3.1 (production umd) -->
   <script>
-/**
- * @license React
- * react.production.min.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
 (function(){'use strict';(function(c,x){"object"===typeof exports&&"undefined"!==typeof module?x(exports):"function"===typeof define&&define.amd?define(["exports"],x):(c=c||self,x(c.React={}))})(this,function(c){function x(a){if(null===a||"object"!==typeof a)return null;a=V&&a[V]||a["@@iterator"];return"function"===typeof a?a:null}function w(a,b,e){this.props=a;this.context=b;this.refs=W;this.updater=e||X}function Y(){}function K(a,b,e){this.props=a;this.context=b;this.refs=W;this.updater=e||X}function Z(a,b,
 e){var m,d={},c=null,h=null;if(null!=b)for(m in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(c=""+b.key),b)aa.call(b,m)&&!ba.hasOwnProperty(m)&&(d[m]=b[m]);var l=arguments.length-2;if(1===l)d.children=e;else if(1<l){for(var f=Array(l),k=0;k<l;k++)f[k]=arguments[k+2];d.children=f}if(a&&a.defaultProps)for(m in l=a.defaultProps,l)void 0===d[m]&&(d[m]=l[m]);return{$$typeof:y,type:a,key:c,ref:h,props:d,_owner:L.current}}function oa(a,b){return{$$typeof:y,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}}
 function M(a){return"object"===typeof a&&null!==a&&a.$$typeof===y}function pa(a){var b={"=":"=0",":":"=2"};return"$"+a.replace(/[=:]/g,function(a){return b[a]})}function N(a,b){return"object"===typeof a&&null!==a&&null!=a.key?pa(""+a.key):b.toString(36)}function B(a,b,e,m,d){var c=typeof a;if("undefined"===c||"boolean"===c)a=null;var h=!1;if(null===a)h=!0;else switch(c){case "string":case "number":h=!0;break;case "object":switch(a.$$typeof){case y:case qa:h=!0}}if(h)return h=a,d=d(h),a=""===m?"."+
@@ -1450,20 +1376,8 @@ c.useEffect=function(a,b){return g.current.useEffect(a,b)};c.useId=function(){re
 c.useState=function(a){return g.current.useState(a)};c.useSyncExternalStore=function(a,b,c){return g.current.useSyncExternalStore(a,b,c)};c.useTransition=function(){return g.current.useTransition()};c.version="18.3.1"});
 })();
   </script>
-  <!-- react-dom 18.3.1 (production umd) -->
   <script>
-/**
- * @license React
- * react-dom.production.min.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-(function(){/*
- Modernizr 3.0.0pre (Custom Build) | MIT
-*/
+(function(){
 'use strict';(function(Q,zb){"object"===typeof exports&&"undefined"!==typeof module?zb(exports,require("react")):"function"===typeof define&&define.amd?define(["exports","react"],zb):(Q=Q||self,zb(Q.ReactDOM={},Q.React))})(this,function(Q,zb){function m(a){for(var b="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=1;c<arguments.length;c++)b+="&args[]="+encodeURIComponent(arguments[c]);return"Minified React error #"+a+"; visit "+b+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}
 function mb(a,b){Ab(a,b);Ab(a+"Capture",b)}function Ab(a,b){$b[a]=b;for(a=0;a<b.length;a++)cg.add(b[a])}function bj(a){if(Zd.call(dg,a))return!0;if(Zd.call(eg,a))return!1;if(cj.test(a))return dg[a]=!0;eg[a]=!0;return!1}function dj(a,b,c,d){if(null!==c&&0===c.type)return!1;switch(typeof b){case "function":case "symbol":return!0;case "boolean":if(d)return!1;if(null!==c)return!c.acceptsBooleans;a=a.toLowerCase().slice(0,5);return"data-"!==a&&"aria-"!==a;default:return!1}}function ej(a,b,c,d){if(null===
 b||"undefined"===typeof b||dj(a,b,c,d))return!0;if(d)return!1;if(null!==c)switch(c.type){case 3:return!b;case 4:return!1===b;case 5:return isNaN(b);case 6:return isNaN(b)||1>b}return!1}function Y(a,b,c,d,e,f,g){this.acceptsBooleans=2===b||3===b||4===b;this.attributeName=d;this.attributeNamespace=e;this.mustUseProperty=c;this.propertyName=a;this.type=b;this.sanitizeURL=f;this.removeEmptyString=g}function $d(a,b,c,d){var e=R.hasOwnProperty(b)?R[b]:null;if(null!==e?0!==e.type:d||!(2<b.length)||"o"!==
@@ -1720,10 +1634,7 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=aj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(m(40));return a._reactRootContainer?(yb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(m(200));if(null==a||void 0===a._reactInternals)throw Error(m(38));return Wd(a,b,c,!1,d)};Q.version="18.3.1-next-f1338f8080-20240426"});
 })();
   </script>
-  <!-- sha256 (geraintluff, public domain) -->
   <script>
-/* Compact SHA-256 (geraintluff, public domain) — works without a secure context.
-   Exposed as window.sha256hex(str) -> lowercase hex digest. UTF-8 safe. */
 (function () {
   function sha256(ascii) {
     function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
@@ -1783,22 +1694,14 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   };
 })();
   </script>
-  <!-- components -->
   <script>
 (function () {
-/* ============================================================
-   ZeroTwo Systems — UI components
-   Exposes components on window for app.jsx
-   ============================================================ */
-
 const {
   useState,
   useEffect,
   useRef,
   useCallback
 } = React;
-
-/* ---- helpers ---- */
 function hostOf(url) {
   try {
     const u = new URL(url);
@@ -1818,15 +1721,7 @@ function readImageFile(file, cb) {
   r.onload = () => cb(r.result);
   r.readAsDataURL(file);
 }
-
-/* ============================================================
-   // PERSONAL — zerotwolove.nl featured strip
-   A warm plug for the side project. Drop (or click) a Zero Two
-   pic onto the slot to set it — saved locally, operator only.
-   To bake in a permanent image instead, drop a file in assets/
-   and set DARLING_IMG below (e.g. "assets/zerotwo.jpg").
-   ============================================================ */
-const DARLING_IMG = "https://i.pinimg.com/736x/00/4b/da/004bda556fc5867a871e1412dd8ccf11.jpg"; // optional permanent image path
+const DARLING_IMG = "";
 const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
 function DarlingBanner({
   unlocked,
@@ -1857,7 +1752,7 @@ function DarlingBanner({
     if (f) readImageFile(f, setImage);
   };
   const onShotClick = e => {
-    if (!unlocked) return; // visitors just follow the link
+    if (!unlocked) return;
     e.preventDefault();
     e.stopPropagation();
     fileRef.current && fileRef.current.click();
@@ -1924,10 +1819,6 @@ function DarlingBanner({
     className: "b-cta"
   }, "enter the archive \u2192"))));
 }
-
-/* ============================================================
-   Typewriter — cycles multilingual subtitle
-   ============================================================ */
 function Typewriter({
   items,
   typeMs = 70,
@@ -1936,8 +1827,7 @@ function Typewriter({
 }) {
   const [idx, setIdx] = useState(0);
   const [txt, setTxt] = useState("");
-  const [phase, setPhase] = useState("type"); // type | hold | del
-
+  const [phase, setPhase] = useState("type");
   useEffect(() => {
     const cur = items[idx];
     let t;
@@ -1948,7 +1838,6 @@ function Typewriter({
     } else if (phase === "hold") {
       t = setTimeout(() => setPhase("del"), 80);
     } else {
-      // del
       if (txt.length > 0) t = setTimeout(() => setTxt(cur.slice(0, txt.length - 1)), delMs);else {
         setIdx((idx + 1) % items.length);
         setPhase("type");
@@ -1964,10 +1853,6 @@ function Typewriter({
     className: "cursor"
   }));
 }
-
-/* ============================================================
-   Status dot
-   ============================================================ */
 function StatusDot({
   state
 }) {
@@ -1977,10 +1862,6 @@ function StatusDot({
     title: "status: " + (state || "off")
   });
 }
-
-/* ============================================================
-   Service tile
-   ============================================================ */
 function ServiceTile({
   svc,
   status,
@@ -2060,10 +1941,6 @@ function ServiceTile({
     title: "Delete"
   }, "\u2715")));
 }
-
-/* ============================================================
-   Edit / Add modal
-   ============================================================ */
 const BLANK = {
   name: "",
   url: "",
@@ -2193,10 +2070,6 @@ function EditModal({
     }
   }, isEdit ? "save" : "create"))));
 }
-
-/* ============================================================
-   Auth gate modal
-   ============================================================ */
 function AuthModal({
   reason,
   onSubmit,
@@ -2267,24 +2140,16 @@ function AuthModal({
     }
   }, "authenticate"))));
 }
-
-/* ============================================================
-   HowItWorks — plain-language "how requesting works" explainer.
-   Fades in over the page. Written for people who aren't technical:
-   request in Seerr -> it downloads itself -> it shows up in Jellyfin.
-   A collapsed "under the hood" drawer keeps the pipeline detail out
-   of the way for the curious.
-   ============================================================ */
 const HOW_STEPS = [{
   n: "01",
   k: "ask",
   title: "Ask for it",
-  body: "Open the request portal and search for any movie or show — new releases, old favourites, a whole series. Found it? Press Request. That's the only thing you ever have to do."
+  body: "Open the request portal and search for any movie or show  -  new releases, old favourites, a whole series. Found it? Press Request. That's the only thing you ever have to do."
 }, {
   n: "02",
   k: "fetch",
   title: "It fetches itself",
-  body: "From here it's automatic. The system goes and finds a good-quality copy, downloads it, and files it away for you. No buttons, no waiting around — you can close the tab and forget about it."
+  body: "From here it's automatic. The system goes and finds a good-quality copy, downloads it, and files it away for you. No buttons, no waiting around  -  you can close the tab and forget about it."
 }, {
   n: "03",
   k: "watch",
@@ -2321,7 +2186,7 @@ function HowItWorks({
     className: "ht"
   }, /*#__PURE__*/React.createElement("span", {
     className: "kw"
-  }, "// guide"), /*#__PURE__*/React.createElement("h2", null, "How requesting works"), /*#__PURE__*/React.createElement("p", null, "The no-jargon version \u2014 for anyone who just wants to watch something.")), /*#__PURE__*/React.createElement("span", {
+  }, "// guide"), /*#__PURE__*/React.createElement("h2", null, "How requesting works"), /*#__PURE__*/React.createElement("p", null, "The no-jargon version  -  for anyone who just wants to watch something.")), /*#__PURE__*/React.createElement("span", {
     className: "x",
     onClick: onClose,
     title: "close"
@@ -2329,7 +2194,7 @@ function HowItWorks({
     className: "how-body"
   }, /*#__PURE__*/React.createElement("p", {
     className: "how-intro"
-  }, "Want to watch something that isn't in the library yet? You don't have to message anyone. Just ", /*#__PURE__*/React.createElement("b", null, "request it"), " \u2014 here's the whole journey, start to finish."), /*#__PURE__*/React.createElement("div", {
+  }, "Want to watch something that isn't in the library yet? You don't have to message anyone. Just ", /*#__PURE__*/React.createElement("b", null, "request it"), "  -  here's the whole journey, start to finish."), /*#__PURE__*/React.createElement("div", {
     className: "how-steps"
   }, HOW_STEPS.map((s, i) => /*#__PURE__*/React.createElement("div", {
     className: "how-step k-" + s.k,
@@ -2348,16 +2213,16 @@ function HowItWorks({
     className: "how-know"
   }, /*#__PURE__*/React.createElement("span", {
     className: "kh"
-  }, "good to know"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, "One request covers the whole thing \u2014 ask for a series and you get every season and episode."), /*#__PURE__*/React.createElement("li", null, "You always watch in ", /*#__PURE__*/React.createElement("b", null, "Jellyfin"), ". The request portal is just your wishlist \u2014 it doesn't play anything itself."), /*#__PURE__*/React.createElement("li", null, "If someone already requested it, it'll simply show as available \u2014 no harm in asking twice."))), /*#__PURE__*/React.createElement("div", {
+  }, "good to know"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, "One request covers the whole thing  -  ask for a series and you get every season and episode."), /*#__PURE__*/React.createElement("li", null, "You always watch in ", /*#__PURE__*/React.createElement("b", null, "Jellyfin"), ". The request portal is just your wishlist  -  it doesn't play anything itself."), /*#__PURE__*/React.createElement("li", null, "If someone already requested it, it'll simply show as available  -  no harm in asking twice."))), /*#__PURE__*/React.createElement("div", {
     className: "how-under"
   }, /*#__PURE__*/React.createElement("button", {
     className: "hu-toggle" + (more ? " on" : ""),
     onClick: () => setMore(v => !v)
   }, /*#__PURE__*/React.createElement("span", {
     className: "chev"
-  }, more ? "▾" : "▸"), " under the hood \u2014 for the curious"), more && /*#__PURE__*/React.createElement("div", {
+  }, more ? "▾" : "▸"), " under the hood  -  for the curious"), more && /*#__PURE__*/React.createElement("div", {
     className: "hu-body"
-  }, /*#__PURE__*/React.createElement("p", null, "Seerr hands your request to ", /*#__PURE__*/React.createElement("b", null, "Radarr"), " (films) or ", /*#__PURE__*/React.createElement("b", null, "Sonarr"), " (TV). They search", /*#__PURE__*/React.createElement("b", null, " nzbgeek"), " for a release, then ", /*#__PURE__*/React.createElement("b", null, "NZBGet"), " pulls it down over ", /*#__PURE__*/React.createElement("b", null, "Newshosting"), " \u2014 or ", /*#__PURE__*/React.createElement("b", null, "qBittorrent"), " grabs a torrent \u2014 and drops the file into the library Jellyfin reads from."), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("p", null, "Seerr hands your request to ", /*#__PURE__*/React.createElement("b", null, "Radarr"), " (films) or ", /*#__PURE__*/React.createElement("b", null, "Sonarr"), " (TV). They search", /*#__PURE__*/React.createElement("b", null, " nzbgeek"), " for a release, then ", /*#__PURE__*/React.createElement("b", null, "NZBGet"), " pulls it down over ", /*#__PURE__*/React.createElement("b", null, "Newshosting"), "  - or ", /*#__PURE__*/React.createElement("b", null, "qBittorrent"), " grabs a torrent  -  and drops the file into the library Jellyfin reads from."), /*#__PURE__*/React.createElement("div", {
     className: "hu-chain"
   }, /*#__PURE__*/React.createElement("span", null, "Seerr"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", null, "Radarr / Sonarr"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", null, "nzbgeek"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", null, "NZBGet \xB7 Newshosting"), /*#__PURE__*/React.createElement("i", null, "\u2192"), /*#__PURE__*/React.createElement("span", {
     className: "end"
@@ -2386,17 +2251,8 @@ Object.assign(window, {
 });
 })();
   </script>
-  <!-- requests -->
   <script>
 (function () {
-/* ============================================================
-   ZeroTwo Systems — account request system
-   RequestPanel (public, soft rate-limit)
-   OperatorRequests (operator-gated inbox)
-   api layer: tries the real backend, falls back to a clearly
-   labelled localStorage "demo" store when no backend is present.
-   ============================================================ */
-
 const {
   useState,
   useEffect,
@@ -2405,16 +2261,8 @@ const {
 } = React;
 const REQ_SERVICES = ["jellyfin", "plex", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
-const SOFT_KEY = "zerotwo.req.last.v1"; // client soft-limit timestamp
-const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
-
-/* ---------- API base ----------------------------------------------------------
-   Same-origin by default (""), so /api/* hits whatever serves this page.
-   For SPLIT hosting — static page on one host, backend on another (e.g. the page
-   on SiteGround and the Node backend on your TrueNAS box) — point it at the
-   backend by adding this to the page <head>:
-     <meta name="zerotwo-api-base" content="https://api.zerotwosystems.nl" />
-   The backend must then allow that page's origin via CORS (CORS_ORIGIN env). */
+const SOFT_KEY = "zerotwo.req.last.v1";
+const DEMO_STORE = "zerotwo.requests.demo.v1";
 const API_BASE = function () {
   try {
     const m = document.querySelector('meta[name="zerotwo-api-base"]');
@@ -2424,8 +2272,6 @@ const API_BASE = function () {
   }
 }();
 const apiUrl = p => API_BASE + p;
-
-/* ---------- client soft-limit (cookie + localStorage) ---------- */
 function setCookie(name, val, ms) {
   try {
     const exp = new Date(Date.now() + ms).toUTCString();
@@ -2457,8 +2303,6 @@ function markRequested() {
   } catch (e) {}
   setCookie("zt_req", String(now), DAY_MS);
 }
-
-/* ---------- demo store ---------- */
 function demoList() {
   try {
     return JSON.parse(localStorage.getItem(DEMO_STORE) || "[]");
@@ -2471,8 +2315,6 @@ function demoSave(arr) {
     localStorage.setItem(DEMO_STORE, JSON.stringify(arr));
   } catch (e) {}
 }
-
-/* ---------- api ---------- */
 function isAbsent(status) {
   return status === 404 || status === 405 || status === 501 || status === 502;
 }
@@ -2513,7 +2355,7 @@ const api = {
         },
         body: JSON.stringify(payload)
       });
-      if (isAbsent(r.status)) return demoSubmit(payload); // no backend present
+      if (isAbsent(r.status)) return demoSubmit(payload);
       if (r.status === 429) {
         const j = await r.json().catch(() => ({}));
         return {
@@ -2536,7 +2378,7 @@ const api = {
         id: j.id
       };
     } catch (e) {
-      return demoSubmit(payload); // fetch threw → demo
+      return demoSubmit(payload);
     }
   },
   async list(key) {
@@ -2605,10 +2447,6 @@ function fmtCountdown(ms) {
   const m = Math.floor(ms % 3600000 / 60000);
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
-
-/* ============================================================
-   Public request panel
-   ============================================================ */
 function RequestPanel({
   open,
   onClose
@@ -2621,9 +2459,9 @@ function RequestPanel({
     note: ""
   };
   const [f, setF] = useState(blank);
-  const [hp, setHp] = useState(""); // honeypot
+  const [hp, setHp] = useState("");
   const [errs, setErrs] = useState({});
-  const [state, setState] = useState("form"); // form | done | blocked | busy
+  const [state, setState] = useState("form");
   const [demo, setDemo] = useState(false);
   const [remaining, setRemaining] = useState(0);
   const openedAt = useRef(Date.now());
@@ -2655,14 +2493,12 @@ function RequestPanel({
   };
   const submit = async () => {
     if (!validate()) return;
-    // client soft-limit re-check
     const last = lastRequestAt();
     if (last + DAY_MS - Date.now() > 0) {
       setRemaining(last + DAY_MS - Date.now());
       setState("blocked");
       return;
     }
-    // honeypot / too-fast → silently accept-looking, never sent
     if (hp || Date.now() - openedAt.current < 1200) {
       markRequested();
       setState("done");
@@ -2675,7 +2511,6 @@ function RequestPanel({
       referral: f.referral.trim().slice(0, 200),
       note: f.note.trim().slice(0, 500),
       website: hp,
-      // honeypot field name
       elapsed: Date.now() - openedAt.current
     };
     const res = await api.submit(payload);
@@ -2687,7 +2522,7 @@ function RequestPanel({
       setRemaining((res.retryAfter || 0) * 1000);
       setState("blocked");
     } else if (res.busy) setState("busy");else setErrs({
-      form: "something went wrong — try again later."
+      form: "something went wrong  -  try again later."
     });
   };
   if (!open) return null;
@@ -2723,7 +2558,7 @@ function RequestPanel({
     onChange: e => set("service", e.target.value)
   }, /*#__PURE__*/React.createElement("option", {
     value: ""
-  }, "\u2014 select a service \u2014"), REQ_SERVICES.map(s => /*#__PURE__*/React.createElement("option", {
+  }, " -  select a service  - "), REQ_SERVICES.map(s => /*#__PURE__*/React.createElement("option", {
     key: s,
     value: s
   }, s[0].toUpperCase() + s.slice(1)))), errs.service && /*#__PURE__*/React.createElement("div", {
@@ -2741,7 +2576,7 @@ function RequestPanel({
     className: "err-msg"
   }, errs.username)), /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "contact \u2014 discord / telegram ", /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("label", null, "contact  -  discord / telegram ", /*#__PURE__*/React.createElement("span", {
     className: "req-mark"
   }, "*")), /*#__PURE__*/React.createElement("input", {
     value: f.contact,
@@ -2794,7 +2629,7 @@ function RequestPanel({
       fontSize: 13,
       lineHeight: 1.6
     }
-  }, "If this is urgent, reach the operator directly through whatever channel you already have \u2014 this form is only for first contact.")), state === "busy" && /*#__PURE__*/React.createElement("div", {
+  }, "If this is urgent, reach the operator directly through whatever channel you already have  -  this form is only for first contact.")), state === "busy" && /*#__PURE__*/React.createElement("div", {
     className: "sheet-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "notice req-block"
@@ -2814,12 +2649,8 @@ function RequestPanel({
     }
   }, /*#__PURE__*/React.createElement("span", {
     className: "demo-tag"
-  }, "\u25CF demo mode \u2014 backend not connected"))))));
+  }, "\u25CF demo mode  -  backend not connected"))))));
 }
-
-/* ============================================================
-   Operator inbox (gated)
-   ============================================================ */
 function OperatorRequests({
   open,
   operatorKey,
@@ -2890,7 +2721,7 @@ function OperatorRequests({
     className: "req-empty"
   }, "loading\u2026"), !loading && unauth && /*#__PURE__*/React.createElement("div", {
     className: "req-empty"
-  }, "unauthorized \u2014 operator key rejected by backend."), !loading && !unauth && shown.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, "unauthorized  -  operator key rejected by backend."), !loading && !unauth && shown.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "req-empty"
   }, "no ", filter === "all" ? "" : filter, " requests."), !loading && !unauth && shown.map(r => /*#__PURE__*/React.createElement("div", {
     className: "req-card s-" + r.status,
@@ -2909,13 +2740,13 @@ function OperatorRequests({
     className: "k"
   }, "username"), /*#__PURE__*/React.createElement("span", {
     className: "v"
-  }, r.username || "—")), /*#__PURE__*/React.createElement("div", {
+  }, r.username || " - ")), /*#__PURE__*/React.createElement("div", {
     className: "rc-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "k"
   }, "contact"), /*#__PURE__*/React.createElement("span", {
     className: "v"
-  }, r.contact || "—")), r.referral && /*#__PURE__*/React.createElement("div", {
+  }, r.contact || " - ")), r.referral && /*#__PURE__*/React.createElement("div", {
     className: "rc-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "k"
@@ -2948,7 +2779,7 @@ function OperatorRequests({
       fontSize: 11,
       marginRight: "auto"
     }
-  }, "demo store (localStorage) \u2014 real data appears once the backend is deployed"), /*#__PURE__*/React.createElement("button", {
+  }, "demo store (localStorage)  -  real data appears once the backend is deployed"), /*#__PURE__*/React.createElement("button", {
     className: "btn",
     onClick: reload
   }, "refresh"))));
@@ -2961,14 +2792,8 @@ Object.assign(window, {
 });
 })();
   </script>
-  <!-- terminal -->
   <script>
 (function () {
-/* ============================================================
-   ZeroTwo Systems — interactive console
-   Quake-style drop-down terminal that drives the dashboard.
-   ============================================================ */
-
 const {
   useState,
   useEffect,
@@ -3028,7 +2853,7 @@ function Terminal({
     id: -3,
     node: /*#__PURE__*/React.createElement("div", {
       className: "term-line l-dim"
-    }, "psst \u2014 try ", /*#__PURE__*/React.createElement("span", {
+    }, "psst  -  try ", /*#__PURE__*/React.createElement("span", {
       className: "zt-link"
     }, "zerotwo"), " ", /*#__PURE__*/React.createElement("span", {
       className: "zt-heart"
@@ -3041,16 +2866,12 @@ function Terminal({
   const line = useCallback((content, cls) => push(/*#__PURE__*/React.createElement("div", {
     className: "term-line " + (cls || "")
   }, content)), [push]);
-
-  /* autoscroll + focus */
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [lines]);
   useEffect(() => {
     if (open && inputRef.current) setTimeout(() => inputRef.current && inputRef.current.focus(), 60);
   }, [open]);
-
-  /* ---- service matching ---- */
   const findSvc = arg => {
     if (!arg) return null;
     if (/^\d+$/.test(arg)) return services[parseInt(arg, 10) - 1] || null;
@@ -3059,8 +2880,6 @@ function Terminal({
   };
   const stCls = st => "l-" + (st === "up" ? "up" : st === "down" ? "down" : st === "checking" ? "amber" : "off");
   const stTxt = st => st === "up" ? "● UP" : st === "down" ? "○ DOWN" : st === "checking" ? "◌ ····" : "· off";
-
-  /* ---- commands ---- */
   const neofetch = () => {
     const up = services.filter(s => statusOf(s) === "up").length;
     const tracked = services.filter(s => s.statusMode !== "off").length;
@@ -3236,7 +3055,7 @@ function Terminal({
         neofetch();
         break;
       case "about":
-        line("ZeroTwo Systems — HomeLab Nexus", "l-sys");
+        line("ZeroTwo Systems  -  HomeLab Nexus", "l-sys");
         line(/*#__PURE__*/React.createElement("span", {
           className: "l-dim"
         }, "a single-file start page served from your nginx root. green-on-black, because of course."));
@@ -3300,7 +3119,7 @@ function Terminal({
         line(/*#__PURE__*/React.createElement("span", null, "\xA0"));
         line(/*#__PURE__*/React.createElement("span", {
           className: "zt-hi"
-        }, "darling://zerotwolove.nl \u2014 archive online"));
+        }, "darling://zerotwolove.nl  -  archive online"));
         line(/*#__PURE__*/React.createElement("span", {
           className: "l-dim"
         }, "// a little corner of the web, made with love for my darling Zero Two"));
@@ -3330,8 +3149,6 @@ function Terminal({
         }, "help"), "."), "l-err");
     }
   };
-
-  /* ---- input handling ---- */
   const onKeyDown = e => {
     if (e.key === "Enter") {
       run(input);
@@ -3402,13 +3219,8 @@ Object.assign(window, {
 });
 })();
   </script>
-  <!-- app (mounts <App/>) -->
   <script>
 (function () {
-/* ============================================================
-   ZeroTwo Systems — app
-   ============================================================ */
-
 const {
   useState,
   useEffect,
@@ -3419,17 +3231,8 @@ const {
 const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
-
-/* --- operator key ---------------------------------------------------------
-   SHA-256 of the operator passphrase. Default passphrase is "zerotwo".
-   CHANGE IT: open the console (unlocked), run  passwd <new phrase>  and paste
-   the printed hash here. The plaintext is never stored in this file.
-   NOTE: a static page can only DETER tampering. For real enforcement put the
-   page behind nginx auth (basic_auth / auth_request). See notes from the chat. */
 const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
 const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽", "محور المختبر المنزلي", "Узел домашней лаборатории", "홈랩 넥서스", "ศูนย์กลางโฮมแล็บ", "Kitovu cha Maabara ya Nyumbani", "Kotilaboratorion Solmukohta"];
-
-/* ---- seed services (from operator config) ---- */
 const SEERR_URL = "https://seerr.zerotwosystems.com/";
 const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
 const SEED = [{
@@ -3496,10 +3299,6 @@ const SEED = [{
   icon: "",
   url: "https://home.zerotwosystems.com/"
 }];
-
-/* ---- one-time migration of a previously-saved dashboard ----
-   Keeps existing user tiles, but adds the newer Seerr request portal and
-   repoints old Jellyfin raw-IP entries to the public Jellyfin URL. */
 function migrate(list) {
   let out = Array.isArray(list) ? list.slice() : [];
   out = out.map(s => s.id === "jellyfin" && /(192\.168\.|:30013)/.test(s.url || "") ? {
@@ -3536,8 +3335,6 @@ function save(svcs) {
     localStorage.setItem(STORE_KEY, JSON.stringify(svcs));
   } catch (e) {}
 }
-
-/* ---- status ping (best-effort, browser no-cors) ---- */
 function ping(url, timeout = 5000) {
   return new Promise(resolve => {
     const ctrl = new AbortController();
@@ -3581,13 +3378,11 @@ function fmtDate(d) {
     day: "2-digit"
   }).toUpperCase();
 }
-
-/* ============================================================ */
 function App() {
   const [svcs, setSvcs] = useState(load);
   const [editing, setEditing] = useState(false);
-  const [modal, setModal] = useState(null); // {svc} | {new:true} | null
-  const [statuses, setStatuses] = useState({}); // id -> up|down|checking
+  const [modal, setModal] = useState(null);
+  const [statuses, setStatuses] = useState({});
   const [q, setQ] = useState("");
   const [now, setNow] = useState(new Date());
   const [termOpen, setTermOpen] = useState(false);
@@ -3598,7 +3393,7 @@ function App() {
       return false;
     }
   });
-  const [auth, setAuth] = useState(null); // { reason, then }
+  const [auth, setAuth] = useState(null);
   const [reqOpen, setReqOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
@@ -3612,14 +3407,10 @@ function App() {
   const searchRef = useRef(null);
   useEffect(() => save(svcs), [svcs]);
   useEffect(() => localStorage.setItem(NEWTAB_KEY, newTab ? "1" : "0"), [newTab]);
-
-  /* clock */
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-
-  /* status checks */
   const runChecks = useCallback(() => {
     const targets = svcs.filter(s => s.statusMode === "auto" || !s.statusMode);
     if (!targets.length) return;
@@ -3640,14 +3431,12 @@ function App() {
     });
   }, [svcs]);
   useEffect(() => {
-    runChecks(); /* eslint-disable-next-line */
+    runChecks();
   }, [svcs.length]);
   useEffect(() => {
     const t = setInterval(runChecks, 60000);
     return () => clearInterval(t);
   }, [runChecks]);
-
-  /* keyboard: "/" focus search, esc clears, ` toggles terminal */
   useEffect(() => {
     const onKey = e => {
       if (e.key === "`" && !e.ctrlKey && !e.metaKey) {
@@ -3673,8 +3462,6 @@ function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [modal, termOpen, unlocked]);
-
-  /* ---- derived ---- */
   const categories = useMemo(() => {
     const set = [];
     svcs.forEach(s => {
@@ -3701,8 +3488,6 @@ function App() {
   const tracked = svcs.filter(s => s.statusMode !== "off").length;
   const effStatus = s => s.statusMode === "up" ? "up" : s.statusMode === "down" ? "down" : s.statusMode === "off" ? "off" : statuses[s.id] || "checking";
   const launch = url => window.open(url, newTab ? "_blank" : "_self");
-
-  /* ---- access control (client-side deterrent) ---- */
   const requireAuth = (reason, then) => {
     if (unlocked) {
       if (then) then();
@@ -3735,8 +3520,6 @@ function App() {
     setEditing(false);
     setInboxOpen(false);
   };
-
-  /* pending-request count for the operator badge */
   useEffect(() => {
     if (!unlocked) {
       setPendingN(0);
@@ -3752,8 +3535,6 @@ function App() {
       alive = false;
     };
   }, [unlocked, inboxOpen]);
-
-  /* ---- actions ---- */
   const upsert = svc => {
     setSvcs(prev => {
       const exists = prev.some(s => s.id === svc.id);
@@ -3816,7 +3597,7 @@ function App() {
   }, "request access"), /*#__PURE__*/React.createElement("span", {
     className: "lock" + (unlocked ? " open" : ""),
     onClick: () => unlocked ? lock() : requireAuth("operator session", () => {}),
-    title: unlocked ? "operator authenticated — click to lock" : "locked — click to authenticate"
+    title: unlocked ? "operator authenticated  -  click to lock" : "locked  -  click to authenticate"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, unlocked ? "◍" : "○"), " ", unlocked ? "operator" : "locked"), unlocked && /*#__PURE__*/React.createElement("button", {
@@ -3846,7 +3627,7 @@ function App() {
     className: "prompt"
   }, ">"), " ", greetWord(hour), ", ", /*#__PURE__*/React.createElement("span", {
     className: "hl"
-  }, "operator"), " ", "\u2014 ", onlineCount, " of ", tracked, " services responding. systems nominal."), /*#__PURE__*/React.createElement("form", {
+  }, "operator"), " ", " -  ", onlineCount, " of ", tracked, " services responding. systems nominal."), /*#__PURE__*/React.createElement("form", {
     className: "search",
     onSubmit: submitSearch
   }, /*#__PURE__*/React.createElement("span", {
@@ -3871,7 +3652,7 @@ function App() {
     className: "ic"
   }, "?"), /*#__PURE__*/React.createElement("span", {
     className: "lbl"
-  }, "new here \u2014 how to request a movie or show"), /*#__PURE__*/React.createElement("span", {
+  }, "new here  -  how to request a movie or show"), /*#__PURE__*/React.createElement("span", {
     className: "arr"
   }, "\u2192")), categories.map(cat => {
     const list = svcs.filter(s => (s.category || "OTHER").toUpperCase() === cat);

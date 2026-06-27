@@ -1,10 +1,3 @@
-/* ============================================================
-   ZeroTwo Systems — account request system
-   RequestPanel (public, soft rate-limit)
-   OperatorRequests (operator-gated inbox)
-   api layer: tries the real backend, falls back to a clearly
-   labelled localStorage "demo" store when no backend is present.
-   ============================================================ */
 
 const { useState, useEffect, useRef, useCallback } = React;
 
@@ -13,7 +6,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";       // client soft-limit timestamp
 const DEMO_STORE = "zerotwo.requests.demo.v1"; // demo inbox
 
-/* ---------- client soft-limit (cookie + localStorage) ---------- */
 function setCookie(name, val, ms) {
   try {
     const exp = new Date(Date.now() + ms).toUTCString();
@@ -40,13 +32,11 @@ function markRequested() {
   setCookie("zt_req", String(now), DAY_MS);
 }
 
-/* ---------- demo store ---------- */
 function demoList() {
   try { return JSON.parse(localStorage.getItem(DEMO_STORE) || "[]"); } catch (e) { return []; }
 }
 function demoSave(arr) { try { localStorage.setItem(DEMO_STORE, JSON.stringify(arr)); } catch (e) {} }
 
-/* ---------- api ---------- */
 function isAbsent(status) { return status === 404 || status === 405 || status === 501 || status === 502; }
 
 function demoSubmit(payload) {
@@ -124,9 +114,6 @@ function fmtCountdown(ms) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-/* ============================================================
-   Public request panel
-   ============================================================ */
 function RequestPanel({ open, onClose }) {
   const blank = { service: "", username: "", contact: "", referral: "", note: "" };
   const [f, setF] = useState(blank);
@@ -160,10 +147,8 @@ function RequestPanel({ open, onClose }) {
 
   const submit = async () => {
     if (!validate()) return;
-    // client soft-limit re-check
     const last = lastRequestAt();
     if (last + DAY_MS - Date.now() > 0) { setRemaining(last + DAY_MS - Date.now()); setState("blocked"); return; }
-    // honeypot / too-fast → silently accept-looking, never sent
     if (hp || Date.now() - openedAt.current < 1200) { markRequested(); setState("done"); return; }
 
     const payload = {
@@ -179,7 +164,7 @@ function RequestPanel({ open, onClose }) {
     if (res.ok) { markRequested(); setDemo(!!res.demo); setState("done"); }
     else if (res.rate) { setRemaining((res.retryAfter || 0) * 1000); setState("blocked"); }
     else if (res.busy) setState("busy");
-    else setErrs({ form: "something went wrong — try again later." });
+    else setErrs({ form: "something went wrong  -  try again later." });
   };
 
   if (!open) return null;
@@ -208,7 +193,7 @@ function RequestPanel({ open, onClose }) {
               <div className="field">
                 <label>service <span className="req-mark">*</span></label>
                 <select value={f.service} onChange={(e) => set("service", e.target.value)}>
-                  <option value="">— select a service —</option>
+                  <option value=""> -  select a service  - </option>
                   {REQ_SERVICES.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
                 </select>
                 {errs.service && <div className="err-msg">{errs.service}</div>}
@@ -221,7 +206,7 @@ function RequestPanel({ open, onClose }) {
               </div>
 
               <div className="field">
-                <label>contact — discord / telegram <span className="req-mark">*</span></label>
+                <label>contact  -  discord / telegram <span className="req-mark">*</span></label>
                 <input value={f.contact} onChange={(e) => set("contact", e.target.value)} placeholder="@handle" maxLength={80} />
                 {errs.contact && <div className="err-msg">{errs.contact}</div>}
               </div>
@@ -236,7 +221,6 @@ function RequestPanel({ open, onClose }) {
                 <textarea value={f.note} onChange={(e) => set("note", e.target.value)} placeholder="anything else the operator should know…" maxLength={500} />
               </div>
 
-              {/* honeypot — humans never see this */}
               <div className="honeypot" aria-hidden="true">
                 <label>Website</label>
                 <input tabIndex={-1} autoComplete="off" value={hp} onChange={(e) => setHp(e.target.value)} />
@@ -260,7 +244,7 @@ function RequestPanel({ open, onClose }) {
             </div>
             <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.6 }}>
               If this is urgent, reach the operator directly through whatever channel you
-              already have — this form is only for first contact.
+              already have  -  this form is only for first contact.
             </p>
           </div>
         )}
@@ -281,7 +265,7 @@ function RequestPanel({ open, onClose }) {
               <h3>request received</h3>
               <p>The operator will review it and reach out via the contact you provided.<br />No account is created automatically.</p>
               <div className="when">next request available in 24h</div>
-              {demo && <div style={{ marginTop: 16 }}><span className="demo-tag">● demo mode — backend not connected</span></div>}
+              {demo && <div style={{ marginTop: 16 }}><span className="demo-tag">● demo mode  -  backend not connected</span></div>}
             </div>
           </div>
         )}
@@ -290,9 +274,6 @@ function RequestPanel({ open, onClose }) {
   );
 }
 
-/* ============================================================
-   Operator inbox (gated)
-   ============================================================ */
 function OperatorRequests({ open, operatorKey, onClose, onCount }) {
   const [reqs, setReqs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -345,7 +326,7 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
           </div>
 
           {loading && <div className="req-empty">loading…</div>}
-          {!loading && unauth && <div className="req-empty">unauthorized — operator key rejected by backend.</div>}
+          {!loading && unauth && <div className="req-empty">unauthorized  -  operator key rejected by backend.</div>}
           {!loading && !unauth && shown.length === 0 && (
             <div className="req-empty">no {filter === "all" ? "" : filter} requests.</div>
           )}
@@ -357,8 +338,8 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
                 <span className="rc-status">{r.status}</span>
                 <span className="rc-time">{relTime(r.ts)}</span>
               </div>
-              <div className="rc-row"><span className="k">username</span><span className="v">{r.username || "—"}</span></div>
-              <div className="rc-row"><span className="k">contact</span><span className="v">{r.contact || "—"}</span></div>
+              <div className="rc-row"><span className="k">username</span><span className="v">{r.username || " - "}</span></div>
+              <div className="rc-row"><span className="k">contact</span><span className="v">{r.contact || " - "}</span></div>
               {r.referral && <div className="rc-row"><span className="k">referral</span><span className="v">{r.referral}</span></div>}
               {r.ip && r.ip !== "demo" && <div className="rc-row"><span className="k">ip</span><span className="v">{r.ip}</span></div>}
               {r.note && <div className="rc-note">{r.note}</div>}
@@ -372,7 +353,7 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
         </div>
 
         <div className="sheet-foot">
-          {demo && <span style={{ color: "var(--muted)", fontSize: 11, marginRight: "auto" }}>demo store (localStorage) — real data appears once the backend is deployed</span>}
+          {demo && <span style={{ color: "var(--muted)", fontSize: 11, marginRight: "auto" }}>demo store (localStorage)  -  real data appears once the backend is deployed</span>}
           <button className="btn" onClick={reload}>refresh</button>
         </div>
       </div>
