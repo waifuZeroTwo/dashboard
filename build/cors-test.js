@@ -59,7 +59,7 @@ function waitReady() {
   check("submit 200 (valid, allowed origin)", r.status === 200, "status=" + r.status + " body=" + r.body);
   check("submit response carries Allow-Origin", r.headers["access-control-allow-origin"] === PAGE_ORIGIN);
 
-  r = await req("POST", "/api/request", { origin: PAGE_ORIGIN, body: { service: "plex", username: "trinity", contact: "@trin", elapsed: 5000 } });
+  r = await req("POST", "/api/request", { origin: PAGE_ORIGIN, body: { service: "seerr", username: "trinity", contact: "@trin", elapsed: 5000 } });
   check("second submit same IP -> 429 (per-IP/day limit)", r.status === 429, "status=" + r.status);
   check("429 still has Allow-Origin (browser can read it)", r.headers["access-control-allow-origin"] === PAGE_ORIGIN);
 
@@ -72,7 +72,7 @@ function waitReady() {
 
   r = await req("POST", "/api/request", { origin: PAGE_ORIGIN, headers: { "CF-Connecting-IP": "203.0.113.7" }, body: { service: "immich", username: "alpha", contact: "@a", elapsed: 5000 } });
   check("submit w/ fresh CF-Connecting-IP -> 200 (treated as new client)", r.status === 200, "status=" + r.status);
-  r = await req("POST", "/api/request", { origin: PAGE_ORIGIN, headers: { "CF-Connecting-IP": "203.0.113.7" }, body: { service: "plex", username: "a2", contact: "@a2", elapsed: 5000 } });
+  r = await req("POST", "/api/request", { origin: PAGE_ORIGIN, headers: { "CF-Connecting-IP": "203.0.113.7" }, body: { service: "seerr", username: "a2", contact: "@a2", elapsed: 5000 } });
   check("same CF-Connecting-IP again -> 429 (limit keyed on forwarded IP)", r.status === 429, "status=" + r.status);
   r = await req("POST", "/api/request", { origin: PAGE_ORIGIN, headers: { "CF-Connecting-IP": "198.51.100.42" }, body: { service: "navidrome", username: "beta", contact: "@b", elapsed: 5000 } });
   check("different CF-Connecting-IP -> 200 (independent bucket)", r.status === 200, "status=" + r.status);

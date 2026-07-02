@@ -60,7 +60,7 @@ const check = (name, cond) => { results.push([name, !!cond]); };
   setValue(ti, "ls"); enter(ti);
   await delay(150);
   const tb = doc.querySelector(".term-body").textContent;
-  check("console `ls` shows service table", /Plex/.test(tb) && /STATUS/.test(tb) && /Jellyfin/.test(tb));
+  check("console `ls` shows service table", /STATUS/.test(tb) && /Jellyfin/.test(tb));
 
   setValue(ti, "passwd hunter2"); enter(ti);
   await delay(150);

@@ -1,7 +1,7 @@
 
 const { useState, useEffect, useRef, useCallback } = React;
 
-const REQ_SERVICES = ["jellyfin", "plex", "seerr", "immich", "navidrome", "nextcloud"];
+const REQ_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";
 const DEMO_STORE = "zerotwo.requests.demo.v1";
