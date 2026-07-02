@@ -19,6 +19,7 @@ const MAX_TOTAL = 5000;             // hard cap on stored rows
 const MIN_FORM_MS = 1200;           // submitted faster than this == bot
 const ALLOWED_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const LIMITS = { username: 60, contact: 80, referral: 200, note: 500 };
+const DEFAULT_OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
 
 const CORS_ORIGINS = (process.env.CORS_ORIGIN || "")
   .split(",").map((s) => s.trim()).filter(Boolean);
@@ -74,6 +75,7 @@ function send(res, code, obj) {
   const body = JSON.stringify(obj);
   res.writeHead(code, {
     "Content-Type": "application/json",
+    "X-Content-Type-Options": "nosniff",
     "Cache-Control": "no-store",
     "Content-Length": Buffer.byteLength(body),
   });
@@ -104,6 +106,11 @@ function readBody(req) {
 function str(v, max) { return (typeof v === "string" ? v : "").trim().slice(0, max); }
 
 async function handleSubmit(req, res) {
+  const contentType = String(req.headers["content-type"] || "");
+  if (contentType && !contentType.toLowerCase().includes("application/json")) {
+    return send(res, 415, { ok: false, error: "unsupported_media_type" });
+  }
+
   let raw;
   try { raw = await readBody(req); } catch (e) { return send(res, 413, { ok: false, error: "too_large" }); }
 
@@ -155,6 +162,11 @@ function handleList(req, res) {
 
 async function handleResolve(req, res) {
   if (!authed(req)) return send(res, 401, { ok: false, error: "unauthorized" });
+  const contentType = String(req.headers["content-type"] || "");
+  if (contentType && !contentType.toLowerCase().includes("application/json")) {
+    return send(res, 415, { ok: false, error: "unsupported_media_type" });
+  }
+
   let body;
   try { body = JSON.parse(await readBody(req) || "{}"); } catch (e) { return send(res, 400, { ok: false }); }
   const { id, action } = body;
@@ -175,16 +187,26 @@ const server = http.createServer((req, res) => {
   if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
 
   const url = (req.url || "").split("?")[0];
+  if (req.method === "GET" && url === "/api/request") {
+    return send(res, 200, { ok: true, services: ALLOWED_SERVICES, limits: LIMITS });
+  }
   if (req.method === "POST" && url === "/api/request") return handleSubmit(req, res);
   if (req.method === "GET" && url === "/api/requests") return handleList(req, res);
   if (req.method === "POST" && url === "/api/request/resolve") return handleResolve(req, res);
-  if (req.method === "GET" && url === "/api/health") return send(res, 200, { ok: true });
+  if (req.method === "GET" && url === "/api/health") {
+    return send(res, 200, {
+      ok: true,
+      service: "zerotwo-requests",
+      pending: requests.filter((r) => r.status === "pending").length,
+      total: requests.length,
+    });
+  }
   return send(res, 404, { ok: false, error: "not_found" });
 });
 
 server.listen(PORT, HOST, () => {
   console.log(`[zerotwo-requests] listening on http://${HOST}:${PORT}`);
   console.log(`[zerotwo-requests] data dir: ${DATA_DIR}`);
-  if (OPERATOR_KEY_SHA256 === "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea")
+  if (OPERATOR_KEY_SHA256 === DEFAULT_OPERATOR_KEY_SHA256)
     console.warn("[zerotwo-requests] WARNING: using DEFAULT operator key (sha256 of 'zerotwo'). Set OPERATOR_KEY_SHA256.");
 });
