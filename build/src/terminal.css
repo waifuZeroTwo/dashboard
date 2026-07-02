@@ -1327,3 +1327,24 @@ button, .lock, .tile, .icon-field .preview, .sheet-head .x, .modal .m-head .x { 
   .how-step .num { width: 38px; height: 38px; font-size: 13px; }
   .howto-trigger { width: 100%; }
 }
+
+.status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.status-line .refreshing { color: var(--green-hi); }
+.status-line .status-warn { color: var(--amber); }
+.dot.degraded { background: var(--amber); box-shadow: 0 0 10px rgba(242,193,78,0.55); }
+.dot.unknown { background: rgba(156, 169, 160, 0.42); box-shadow: none; }
+.last-checked {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  opacity: 0.72;
+}
