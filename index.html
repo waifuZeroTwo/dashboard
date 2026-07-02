@@ -2259,7 +2259,7 @@ const {
   useRef,
   useCallback
 } = React;
-const REQ_SERVICES = ["jellyfin", "plex", "seerr", "immich", "navidrome", "nextcloud"];
+const REQ_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";
 const DEMO_STORE = "zerotwo.requests.demo.v1";
@@ -3236,13 +3236,6 @@ const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "
 const SEERR_URL = "https://seerr.zerotwosystems.com/";
 const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
 const SEED = [{
-  id: "plex",
-  name: "Plex",
-  category: "MEDIA",
-  statusMode: "auto",
-  icon: "",
-  url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1"
-}, {
   id: "jellyfin",
   name: "Jellyfin",
   category: "MEDIA",

@@ -24,8 +24,6 @@ const SEERR_URL = "https://seerr.zerotwosystems.com/";
 const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
 
 const SEED = [
-  { id: "plex",      name: "Plex",          category: "MEDIA",  statusMode: "auto", icon: "",
-    url: "https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1" },
   { id: "jellyfin",  name: "Jellyfin",      category: "MEDIA",  statusMode: "auto", icon: "",
     url: JELLYFIN_URL },
   { id: "seerr",     name: "Seerr",         category: "MEDIA",  statusMode: "auto", icon: "",

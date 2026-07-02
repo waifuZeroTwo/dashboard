@@ -17,7 +17,6 @@ Great use case  -  a self-hosted "start page" that lives at your domain root and
 ## User
 
 Questions answered:
-- services: https://app.plex.tv/desktop/#!/media/57516c32494cc91916f81ad71efb32e1bbd73677/com.plexapp.plugins.library?source=1
 
 http://192.168.1.83:81/ui/dashboard (truenas dashboard i go to through a wireguard vpn)
 
@@ -96,7 +95,7 @@ _[tool: view_image]_
 
 _[tool: done]_
 
-Looking sharp  -  CRT terminal aesthetic, the title is mid-cycle through Devanagari, status dots are live (Plex/Immich up, LAN-only nodes show down since this sandbox can't reach your VPN). Let me surface it and verify.
+Looking sharp  -  CRT terminal aesthetic, the title is mid-cycle through Devanagari, status dots are live (Immich up, LAN-only nodes show down since this sandbox can't reach your VPN). Let me surface it and verify.
 
 _[tool: fork_verifier_agent]_
 
@@ -391,7 +390,7 @@ I'll build the request page (on-theme, with prominent once-per-day messaging and
 Questions answered:
 - backend: I'll run a tiny backend on my server (recommended  -  real per-IP once/day + anti-bot)
 - delivery: Write to a file on the server + show me a pending-requests view in the dashboard
-- services: jellyfin, plex, immich, navidrome, nextcloud. all of those
+- services: jellyfin, immich, navidrome, nextcloud. all of those
 - fields: Which service (required), Desired username, Contact (Discord/Telegram handle), Reason / note, How they know you (invite code or message)
 - invite_gate: No  -  open to anyone (rate-limited)
 - rate_window: Rolling 24 hours from their last request
@@ -463,7 +462,7 @@ The request system is built and live. Here's the rundown while the verifier runs
 ## What I added
 
 **Public "Request access" panel** (slide-over, no separate page)
-- Fields: **service** (Jellyfin/Plex/Immich/Navidrome/Nextcloud, required), **desired username**, **contact** (Discord/Telegram), **how you know me**, optional **note**.
+- Fields: **service** (Jellyfin/Immich/Navidrome/Nextcloud, required), **desired username**, **contact** (Discord/Telegram), **how you know me**, optional **note**.
 - A prominent amber **"ONE REQUEST PER 24 HOURS"** banner, and a blocked state with a live countdown if you've already requested.
 - Soft limit via **localStorage + cookie**; honeypot field + minimum-form-time to trip up bots.
 
