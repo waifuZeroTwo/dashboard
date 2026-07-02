@@ -10,7 +10,7 @@ const PORT = parseInt(process.env.PORT || "8787", 10);
 const HOST = process.env.HOST || "127.0.0.1";
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const OPERATOR_KEY_SHA256 = (process.env.OPERATOR_KEY_SHA256 ||
-  "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea").toLowerCase();
+  "01922ae6ef59603ba3777c8e139f02a9198dc149f85f038f8f058ba4607c8830").toLowerCase();
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_BODY = 4 * 1024;          // 4 KB hard cap on request bodies
@@ -19,7 +19,7 @@ const MAX_TOTAL = 5000;             // hard cap on stored rows
 const MIN_FORM_MS = 1200;           // submitted faster than this == bot
 const ALLOWED_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const LIMITS = { username: 60, contact: 80, referral: 200, note: 500 };
-const DEFAULT_OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
+const DEFAULT_OPERATOR_KEY_SHA256 = "01922ae6ef59603ba3777c8e139f02a9198dc149f85f038f8f058ba4607c8830";
 
 const CORS_ORIGINS = (process.env.CORS_ORIGIN || "")
   .split(",").map((s) => s.trim()).filter(Boolean);
@@ -208,5 +208,5 @@ server.listen(PORT, HOST, () => {
   console.log(`[zerotwo-requests] listening on http://${HOST}:${PORT}`);
   console.log(`[zerotwo-requests] data dir: ${DATA_DIR}`);
   if (OPERATOR_KEY_SHA256 === DEFAULT_OPERATOR_KEY_SHA256)
-    console.warn("[zerotwo-requests] WARNING: using DEFAULT operator key (sha256 of 'zerotwo'). Set OPERATOR_KEY_SHA256.");
+    console.warn("[zerotwo-requests] WARNING: using DEFAULT operator key hash. Set OPERATOR_KEY_SHA256.");
 });
