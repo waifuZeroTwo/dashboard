@@ -150,13 +150,27 @@ function statusListFromPayload(payload) {
   return raw.map(normalizeStatusService).filter(Boolean);
 }
 
+function stableServiceFields(svc) {
+  const idSource = (svc && (svc.id || svc.name || svc.url || svc.category)) || "unknown-service";
+  const id = String(idSource).trim() || "unknown-service";
+  const name = String((svc && svc.name) || id).trim() || id;
+  const category = String((svc && svc.category) || "OTHER").trim().toUpperCase() || "OTHER";
+  const url = typeof (svc && svc.url) === "string" ? svc.url : "";
+  return { ...svc, id, name, category, url };
+}
+
 function mergeStatusServices(existing, backendServices) {
-  const byId = new Map(existing.map((s) => [s.id, s]));
+  const byId = new Map(existing.map((s) => [s.id, stableServiceFields(s)]));
   const order = existing.map((s) => s.id);
   backendServices.forEach((svc) => {
     const prev = byId.get(svc.id);
     if (!prev) order.push(svc.id);
-    byId.set(svc.id, { ...(prev || { name: svc.id, category: "OTHER", statusMode: "auto", icon: "", url: "#" }), ...svc });
+    byId.set(svc.id, stableServiceFields({
+      ...(prev || { id: svc.id, name: svc.id, category: "OTHER", statusMode: "auto", icon: "", url: "" }),
+      ...svc,
+      status: svc.status || (prev && prev.status) || "unknown",
+      lastChecked: svc.lastChecked || (prev && prev.lastChecked) || null,
+    }));
   });
   return order.map((id) => byId.get(id)).filter(Boolean);
 }
@@ -286,12 +300,8 @@ function App() {
   }, [svcs]);
 
   const query = q.trim().toLowerCase();
-  const isMatch = (s) =>
-    !query ||
-    s.name.toLowerCase().includes(query) ||
-    (s.category || "").toLowerCase().includes(query) ||
-    (s.url || "").toLowerCase().includes(query) ||
-    (s.availability || "").toLowerCase().includes(query);
+  const searchText = (s) => [s.name, s.category, s.url, s.subtitle].filter(Boolean).map(String).join(" ").toLowerCase();
+  const isMatch = (s) => !query || searchText(s).includes(query);
   const matches = useMemo(() => svcs.filter(isMatch), [svcs, query]);
 
   const onlineCount = svcs.filter((s) => {
