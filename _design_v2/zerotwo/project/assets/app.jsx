@@ -5,7 +5,7 @@ const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
 
-const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
+const OPERATOR_KEY_SHA256 = "01922ae6ef59603ba3777c8e139f02a9198dc149f85f038f8f058ba4607c8830";
 
 const TITLE_CYCLE = [
   "HomeLab Nexus",
