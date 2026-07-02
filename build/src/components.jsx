@@ -144,12 +144,18 @@ function ServiceTile({ svc, status, lastChecked, editing, dimmed, matched, newTa
 
   const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
 
+  const hasLaunchUrl = !!(svc.url && svc.url.trim());
+  const unavailableText = svc.availability || "Launch URL unavailable";
+
   return (
     <a
       className={cls.join(" ")}
-      href={svc.url}
-      target={newTab ? "_blank" : "_self"}
-      rel="noopener noreferrer"
+      href={hasLaunchUrl ? svc.url : undefined}
+      aria-disabled={hasLaunchUrl ? undefined : "true"}
+      title={hasLaunchUrl ? undefined : unavailableText}
+      target={hasLaunchUrl ? (newTab ? "_blank" : "_self") : undefined}
+      rel={hasLaunchUrl ? "noopener noreferrer" : undefined}
+      onClick={hasLaunchUrl ? undefined : (e) => e.preventDefault()}
       onDragOver={(e) => { if (!unlocked) return; e.preventDefault(); setDrag(true); }}
       onDragLeave={() => setDrag(false)}
       onDrop={onDrop}
@@ -166,7 +172,7 @@ function ServiceTile({ svc, status, lastChecked, editing, dimmed, matched, newTa
           <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{svc.name}</span>
           <span className="caret">›</span>
         </div>
-        <div className="host">{hostOf(svc.url)}</div>
+        <div className="host">{hasLaunchUrl ? hostOf(svc.url) : unavailableText}</div>
         <div className="last-checked">checked {displayDateTime(lastChecked)}</div>
       </div>
 
@@ -197,11 +203,11 @@ function EditModal({ initial, categories, onSave, onClose }) {
     if (u) set("icon", u.trim());
   };
 
-  const valid = f.name.trim() && f.url.trim();
+  const valid = f.name.trim();
   const save = () => {
     if (!valid) return;
     let url = f.url.trim();
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
     onSave({ ...f, name: f.name.trim(), url, category: (f.category || "OTHER").trim().toUpperCase() });
   };
 

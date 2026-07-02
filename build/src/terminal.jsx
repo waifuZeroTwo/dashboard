@@ -94,7 +94,7 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
           <span className="l-dim">{tpad(i + 1, 3)}</span>
           <span className="l-ok">{tpad(s.name, 18)}</span>
           <span className="l-dim">{tpad((s.category || "OTHER").toUpperCase(), 22)}</span>
-          <span className="l-cmd">{tpad(window.hostOf(s.url), 30)}</span>
+          <span className="l-cmd">{tpad(s.url ? window.hostOf(s.url) : (s.availability || "unavailable"), 30)}</span>
           <span className={stCls(st)}>{stTxt(st)}</span>
         </div>
       );
@@ -146,6 +146,7 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
         if (!arg) { line("usage: open <#|name>", "l-err"); break; }
         const s = findSvc(arg);
         if (!s) { line(`no service matching "${arg}". try \`ls\`.`, "l-err"); break; }
+        if (!s.url) { line(<span><span className="l-ok">{s.name}</span> has no public launch URL configured.</span>, "l-err"); break; }
         line(<span>launching <span className="l-ok">{s.name}</span> → <span className="l-dim">{s.url}</span></span>, "l-sys");
         onLaunch(s.url);
         break;
@@ -157,7 +158,7 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
           const s = findSvc(arg);
           if (!s) { line(`no service matching "${arg}".`, "l-err"); break; }
           const st = statusOf(s);
-          line(<span><span className="l-ok">{s.name}</span>  <span className={stCls(st)}>{stTxt(st)}</span>  <span className="l-dim">{window.hostOf(s.url)}</span></span>);
+          line(<span><span className="l-ok">{s.name}</span>  <span className={stCls(st)}>{stTxt(st)}</span>  <span className="l-dim">{s.url ? window.hostOf(s.url) : (s.availability || "unavailable")}</span></span>);
         } else {
           line("re-scanning all nodes…", "l-sys");
           onPing();

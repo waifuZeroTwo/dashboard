@@ -1923,11 +1923,16 @@ function ServiceTile({
     e.preventDefault();
     e.stopPropagation();
   };
+  const hasLaunchUrl = !!(svc.url && svc.url.trim());
+  const unavailableText = svc.availability || "Launch URL unavailable";
   return /*#__PURE__*/React.createElement("a", {
     className: cls.join(" "),
-    href: svc.url,
-    target: newTab ? "_blank" : "_self",
-    rel: "noopener noreferrer",
+    href: hasLaunchUrl ? svc.url : undefined,
+    "aria-disabled": hasLaunchUrl ? undefined : "true",
+    title: hasLaunchUrl ? undefined : unavailableText,
+    target: hasLaunchUrl ? newTab ? "_blank" : "_self" : undefined,
+    rel: hasLaunchUrl ? "noopener noreferrer" : undefined,
+    onClick: hasLaunchUrl ? undefined : e => e.preventDefault(),
     onDragOver: e => {
       if (!unlocked) return;
       e.preventDefault();
@@ -1957,7 +1962,7 @@ function ServiceTile({
     className: "caret"
   }, "\u203A")), /*#__PURE__*/React.createElement("div", {
     className: "host"
-  }, hostOf(svc.url)), /*#__PURE__*/React.createElement("div", {
+  }, hasLaunchUrl ? hostOf(svc.url) : unavailableText), /*#__PURE__*/React.createElement("div", {
     className: "last-checked"
   }, "checked ", displayDateTime(lastChecked))), editing && /*#__PURE__*/React.createElement("div", {
     className: "edit-tools"
@@ -2007,11 +2012,11 @@ function EditModal({
     const u = prompt("Paste a logo image URL:");
     if (u) set("icon", u.trim());
   };
-  const valid = f.name.trim() && f.url.trim();
+  const valid = f.name.trim();
   const save = () => {
     if (!valid) return;
     let url = f.url.trim();
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
     onSave({
       ...f,
       name: f.name.trim(),
@@ -3013,7 +3018,7 @@ function Terminal({
         className: "l-dim"
       }, tpad((s.category || "OTHER").toUpperCase(), 22)), /*#__PURE__*/React.createElement("span", {
         className: "l-cmd"
-      }, tpad(window.hostOf(s.url), 30)), /*#__PURE__*/React.createElement("span", {
+      }, tpad(s.url ? window.hostOf(s.url) : s.availability || "unavailable", 30)), /*#__PURE__*/React.createElement("span", {
         className: stCls(st)
       }, stTxt(st))));
     });
@@ -3060,6 +3065,12 @@ function Terminal({
             line(`no service matching "${arg}". try \`ls\`.`, "l-err");
             break;
           }
+          if (!s.url) {
+            line(/*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+              className: "l-ok"
+            }, s.name), " has no public launch URL configured."), "l-err");
+            break;
+          }
           line(/*#__PURE__*/React.createElement("span", null, "launching ", /*#__PURE__*/React.createElement("span", {
             className: "l-ok"
           }, s.name), " \u2192 ", /*#__PURE__*/React.createElement("span", {
@@ -3084,7 +3095,7 @@ function Terminal({
               className: stCls(st)
             }, stTxt(st)), "  ", /*#__PURE__*/React.createElement("span", {
               className: "l-dim"
-            }, window.hostOf(s.url))));
+            }, s.url ? window.hostOf(s.url) : s.availability || "unavailable")));
           } else {
             line("re-scanning all nodes…", "l-sys");
             onPing();
@@ -3365,9 +3376,10 @@ const SEED = [{
   id: "truenas",
   name: "TrueNAS",
   category: "STORAGE & CLOUD",
-  statusMode: "auto",
+  statusMode: "off",
   icon: "",
-  url: "http://192.168.1.83:81/ui/dashboard"
+  url: "",
+  availability: "Public launch URL pending"
 }, {
   id: "nextcloud",
   name: "Nextcloud",
@@ -3379,9 +3391,10 @@ const SEED = [{
   id: "porttracker",
   name: "Porttracker",
   category: "NETWORK & AUTOMATION",
-  statusMode: "auto",
+  statusMode: "off",
   icon: "",
-  url: "http://192.168.1.83:30233/?server=local"
+  url: "",
+  availability: "Public launch URL pending"
 }, {
   id: "homeassistant",
   name: "Home Assistant",
@@ -3390,12 +3403,37 @@ const SEED = [{
   icon: "",
   url: "https://home.zerotwosystems.com/"
 }];
+function isPrivateLanUrl(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host === "localhost" || host.endsWith(".local")) return true;
+    if (/^10\./.test(host) || /^192\.168\./.test(host)) return true;
+    const m = host.match(/^172\.(\d{1,2})\./);
+    return !!(m && Number(m[1]) >= 16 && Number(m[1]) <= 31);
+  } catch (e) {
+    return false;
+  }
+}
+function sanitizeServiceUrl(svc) {
+  if (!svc || !isPrivateLanUrl(svc.url || "")) return svc;
+  if (svc.id === "jellyfin") return {
+    ...svc,
+    url: JELLYFIN_URL
+  };
+  if (svc.id === "seerr") return {
+    ...svc,
+    url: SEERR_URL
+  };
+  return {
+    ...svc,
+    url: "",
+    statusMode: "off",
+    availability: "Public launch URL pending"
+  };
+}
 function migrate(list) {
   let out = Array.isArray(list) ? list.slice() : [];
-  out = out.map(s => s.id === "jellyfin" && /(192\.168\.|:30013)/.test(s.url || "") ? {
-    ...s,
-    url: JELLYFIN_URL
-  } : s);
+  out = out.map(sanitizeServiceUrl);
   if (!out.some(s => s.id === "seerr")) {
     const seerr = {
       id: "seerr",
@@ -3687,7 +3725,7 @@ function App() {
     return set;
   }, [svcs]);
   const query = q.trim().toLowerCase();
-  const isMatch = s => !query || s.name.toLowerCase().includes(query) || (s.category || "").toLowerCase().includes(query) || s.url.toLowerCase().includes(query);
+  const isMatch = s => !query || s.name.toLowerCase().includes(query) || (s.category || "").toLowerCase().includes(query) || (s.url || "").toLowerCase().includes(query) || (s.availability || "").toLowerCase().includes(query);
   const matches = useMemo(() => svcs.filter(isMatch), [svcs, query]);
   const onlineCount = svcs.filter(s => {
     const st = s.statusMode === "up" ? "online" : s.statusMode === "down" ? "offline" : s.statusMode === "off" ? "off" : statuses[s.id];
@@ -3695,7 +3733,9 @@ function App() {
   }).length;
   const tracked = svcs.filter(s => s.statusMode !== "off").length;
   const effStatus = s => s.statusMode === "up" ? "online" : s.statusMode === "down" ? "offline" : s.statusMode === "off" ? "off" : statuses[s.id] || "unknown";
-  const launch = url => window.open(url, newTab ? "_blank" : "_self");
+  const launch = url => {
+    if (url) window.open(url, newTab ? "_blank" : "_self");
+  };
   const requireAuth = (reason, then) => {
     if (unlocked) {
       if (then) then();
@@ -3771,7 +3811,7 @@ function App() {
     e.preventDefault();
     if (!query) return;
     if (matches.length > 0) {
-      window.open(matches[0].url, newTab ? "_blank" : "_self");
+      if (matches[0].url) window.open(matches[0].url, newTab ? "_blank" : "_self");
     } else {
       window.open("https://www.google.com/search?q=" + encodeURIComponent(q), newTab ? "_blank" : "_self");
     }
