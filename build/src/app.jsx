@@ -32,23 +32,38 @@ const SEED = [
     url: "https://music.zerotwosystems.com/" },
   { id: "immich",    name: "Immich",        category: "MEDIA",  statusMode: "auto", icon: "",
     url: "https://photos.zerotwosystems.com/" },
-  { id: "truenas",   name: "TrueNAS",       category: "STORAGE & CLOUD", statusMode: "auto", icon: "",
-    url: "http://192.168.1.83:81/ui/dashboard" },
+  { id: "truenas",   name: "TrueNAS",       category: "STORAGE & CLOUD", statusMode: "off", icon: "",
+    url: "", availability: "Public launch URL pending" },
   { id: "nextcloud", name: "Nextcloud",     category: "STORAGE & CLOUD", statusMode: "auto", icon: "",
     url: "https://cloud.zerotwosystems.com/" },
-  { id: "porttracker", name: "Porttracker", category: "NETWORK & AUTOMATION", statusMode: "auto", icon: "",
-    url: "http://192.168.1.83:30233/?server=local" },
+  { id: "porttracker", name: "Porttracker", category: "NETWORK & AUTOMATION", statusMode: "off", icon: "",
+    url: "", availability: "Public launch URL pending" },
   { id: "homeassistant", name: "Home Assistant", category: "NETWORK & AUTOMATION", statusMode: "auto", icon: "",
     url: "https://home.zerotwosystems.com/" },
 ];
 
+function isPrivateLanUrl(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host === "localhost" || host.endsWith(".local")) return true;
+    if (/^10\./.test(host) || /^192\.168\./.test(host)) return true;
+    const m = host.match(/^172\.(\d{1,2})\./);
+    return !!(m && Number(m[1]) >= 16 && Number(m[1]) <= 31);
+  } catch (e) {
+    return false;
+  }
+}
+
+function sanitizeServiceUrl(svc) {
+  if (!svc || !isPrivateLanUrl(svc.url || "")) return svc;
+  if (svc.id === "jellyfin") return { ...svc, url: JELLYFIN_URL };
+  if (svc.id === "seerr") return { ...svc, url: SEERR_URL };
+  return { ...svc, url: "", statusMode: "off", availability: "Public launch URL pending" };
+}
+
 function migrate(list) {
   let out = Array.isArray(list) ? list.slice() : [];
-  out = out.map((s) =>
-    s.id === "jellyfin" && /(192\.168\.|:30013)/.test(s.url || "")
-      ? { ...s, url: JELLYFIN_URL }
-      : s
-  );
+  out = out.map(sanitizeServiceUrl);
   if (!out.some((s) => s.id === "seerr")) {
     const seerr = { id: "seerr", name: "Seerr", category: "MEDIA", statusMode: "auto", icon: "", url: SEERR_URL };
     const ji = out.findIndex((s) => s.id === "jellyfin");
@@ -275,7 +290,8 @@ function App() {
     !query ||
     s.name.toLowerCase().includes(query) ||
     (s.category || "").toLowerCase().includes(query) ||
-    s.url.toLowerCase().includes(query);
+    (s.url || "").toLowerCase().includes(query) ||
+    (s.availability || "").toLowerCase().includes(query);
   const matches = useMemo(() => svcs.filter(isMatch), [svcs, query]);
 
   const onlineCount = svcs.filter((s) => {
@@ -284,7 +300,7 @@ function App() {
   }).length;
   const tracked = svcs.filter((s) => s.statusMode !== "off").length;
   const effStatus = (s) => s.statusMode === "up" ? "online" : s.statusMode === "down" ? "offline" : s.statusMode === "off" ? "off" : (statuses[s.id] || "unknown");
-  const launch = (url) => window.open(url, newTab ? "_blank" : "_self");
+  const launch = (url) => { if (url) window.open(url, newTab ? "_blank" : "_self"); };
 
   const requireAuth = (reason, then) => {
     if (unlocked) { if (then) then(); }
@@ -338,7 +354,7 @@ function App() {
     e.preventDefault();
     if (!query) return;
     if (matches.length > 0) {
-      window.open(matches[0].url, newTab ? "_blank" : "_self");
+      if (matches[0].url) window.open(matches[0].url, newTab ? "_blank" : "_self");
     } else {
       window.open("https://www.google.com/search?q=" + encodeURIComponent(q), newTab ? "_blank" : "_self");
     }
