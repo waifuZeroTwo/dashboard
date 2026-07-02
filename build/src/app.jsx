@@ -70,14 +70,87 @@ function save(svcs) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(svcs)); } catch (e) {}
 }
 
+const DEFAULT_API_BASE = "https://api.zerotwosystems.com";
+const STATUS_REFRESH_MS = 30000;
+const STATUS_TIMEOUT_MS = 8000;
+
+function normalizeApiBase(base) {
+  const trimmed = (base || "").trim().replace(/\/+$/, "");
+  return trimmed || DEFAULT_API_BASE;
+}
+
+const API_BASE = (function () {
+  try {
+    const m = document.querySelector('meta[name="zerotwo-api-base"]');
+    return normalizeApiBase(m && m.getAttribute("content"));
+  } catch (e) { return DEFAULT_API_BASE; }
+})();
+const apiUrl = (path) => API_BASE + (path[0] === "/" ? path : "/" + path);
+
+async function getJson(path, timeout = STATUS_TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const response = await fetch(apiUrl(path), { cache: "no-store", signal: ctrl.signal });
+    if (!response.ok) throw new Error("status api returned " + response.status);
+    return await response.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 function ping(url, timeout = 5000) {
   return new Promise((resolve) => {
     const ctrl = new AbortController();
     const t = setTimeout(() => { ctrl.abort(); }, timeout);
     fetch(url, { mode: "no-cors", cache: "no-store", signal: ctrl.signal, redirect: "follow" })
-      .then(() => { clearTimeout(t); resolve("up"); })
-      .catch(() => { clearTimeout(t); resolve("down"); });
+      .then(() => { clearTimeout(t); resolve("online"); })
+      .catch(() => { clearTimeout(t); resolve("offline"); });
   });
+}
+
+function normalizeStatus(status) {
+  const st = String(status || "").trim().toLowerCase();
+  if (st === "online" || st === "up") return "online";
+  if (st === "degraded" || st === "warn" || st === "warning") return "degraded";
+  if (st === "offline" || st === "down") return "offline";
+  return "unknown";
+}
+
+function normalizeStatusService(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const id = String(entry.id || entry.slug || entry.name || "").trim();
+  if (!id) return null;
+  const svc = { id, status: normalizeStatus(entry.status), lastChecked: entry.lastChecked || entry.updatedAt || entry.checkedAt || null };
+  if (typeof entry.name === "string" && entry.name.trim()) svc.name = entry.name.trim();
+  if (typeof entry.category === "string" && entry.category.trim()) svc.category = entry.category.trim().toUpperCase();
+  if (typeof entry.url === "string" && entry.url.trim()) svc.url = entry.url.trim();
+  if (typeof entry.icon === "string") svc.icon = entry.icon;
+  if (typeof entry.statusMode === "string") svc.statusMode = entry.statusMode;
+  return svc;
+}
+
+function statusListFromPayload(payload) {
+  const raw = Array.isArray(payload) ? payload : Array.isArray(payload && payload.services) ? payload.services : [];
+  return raw.map(normalizeStatusService).filter(Boolean);
+}
+
+function mergeStatusServices(existing, backendServices) {
+  const byId = new Map(existing.map((s) => [s.id, s]));
+  const order = existing.map((s) => s.id);
+  backendServices.forEach((svc) => {
+    const prev = byId.get(svc.id);
+    if (!prev) order.push(svc.id);
+    byId.set(svc.id, { ...(prev || { name: svc.id, category: "OTHER", statusMode: "auto", icon: "", url: "#" }), ...svc });
+  });
+  return order.map((id) => byId.get(id)).filter(Boolean);
+}
+
+function displayDateTime(value) {
+  if (!value) return "never";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString([], { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 function greetWord(h) {
@@ -99,6 +172,7 @@ function App() {
   const [editing, setEditing] = useState(false);
   const [modal, setModal] = useState(null);
   const [statuses, setStatuses] = useState({});
+  const [statusMeta, setStatusMeta] = useState({ refreshing: false, backendUnavailable: false, updatedAt: null });
   const [q, setQ] = useState("");
   const [now, setNow] = useState(new Date());
   const [termOpen, setTermOpen] = useState(false);
@@ -115,7 +189,9 @@ function App() {
     return v === null ? true : v === "1";
   });
   const searchRef = useRef(null);
+  const svcsRef = useRef(svcs);
 
+  useEffect(() => { svcsRef.current = svcs; }, [svcs]);
   useEffect(() => save(svcs), [svcs]);
   useEffect(() => localStorage.setItem(NEWTAB_KEY, newTab ? "1" : "0"), [newTab]);
 
@@ -125,21 +201,39 @@ function App() {
   }, []);
 
   const runChecks = useCallback(() => {
-    const targets = svcs.filter((s) => s.statusMode === "auto" || !s.statusMode);
-    if (!targets.length) return;
-    setStatuses((prev) => {
-      const n = { ...prev };
-      targets.forEach((s) => { n[s.id] = "checking"; });
-      return n;
-    });
-    targets.forEach((s) => {
-      ping(s.url).then((res) => setStatuses((prev) => ({ ...prev, [s.id]: res })));
-    });
-  }, [svcs]);
+    let alive = true;
+    setStatusMeta((prev) => ({ ...prev, refreshing: true }));
+    getJson("/status", STATUS_TIMEOUT_MS)
+      .then((payload) => {
+        if (!alive) return;
+        const backendServices = statusListFromPayload(payload);
+        const nextStatuses = {};
+        backendServices.forEach((svc) => { nextStatuses[svc.id] = svc.status; });
+        setSvcs((prev) => mergeStatusServices(prev, backendServices));
+        setStatuses(nextStatuses);
+        setStatusMeta({
+          refreshing: false,
+          backendUnavailable: false,
+          updatedAt: (payload && payload.updatedAt) || (payload && payload.lastChecked) || new Date().toISOString(),
+        });
+      })
+      .catch(() => {
+        if (!alive) return;
+        setStatuses((prev) => {
+          const next = { ...prev };
+          svcsRef.current.forEach((s) => {
+            if (s.statusMode === "auto" || !s.statusMode) next[s.id] = "unknown";
+          });
+          return next;
+        });
+        setStatusMeta((prev) => ({ ...prev, refreshing: false, backendUnavailable: true, updatedAt: new Date().toISOString() }));
+      });
+    return () => { alive = false; };
+  }, []);
 
-  useEffect(() => { runChecks();  }, [svcs.length]);
+  useEffect(() => runChecks(), [runChecks]);
   useEffect(() => {
-    const t = setInterval(runChecks, 60000);
+    const t = setInterval(runChecks, STATUS_REFRESH_MS);
     return () => clearInterval(t);
   }, [runChecks]);
 
@@ -185,11 +279,11 @@ function App() {
   const matches = useMemo(() => svcs.filter(isMatch), [svcs, query]);
 
   const onlineCount = svcs.filter((s) => {
-    const st = s.statusMode === "up" ? "up" : s.statusMode === "down" ? "down" : s.statusMode === "off" ? "off" : statuses[s.id];
-    return st === "up";
+    const st = s.statusMode === "up" ? "online" : s.statusMode === "down" ? "offline" : s.statusMode === "off" ? "off" : statuses[s.id];
+    return st === "online";
   }).length;
   const tracked = svcs.filter((s) => s.statusMode !== "off").length;
-  const effStatus = (s) => s.statusMode === "up" ? "up" : s.statusMode === "down" ? "down" : s.statusMode === "off" ? "off" : (statuses[s.id] || "checking");
+  const effStatus = (s) => s.statusMode === "up" ? "online" : s.statusMode === "down" ? "offline" : s.statusMode === "off" ? "off" : (statuses[s.id] || "unknown");
   const launch = (url) => window.open(url, newTab ? "_blank" : "_self");
 
   const requireAuth = (reason, then) => {
@@ -290,6 +384,11 @@ function App() {
             <span className="prompt">&gt;</span> {greetWord(hour)}, <span className="hl">operator</span>
             {" "} -  {onlineCount} of {tracked} services responding. systems nominal.
           </div>
+          <div className="status-line">
+            {statusMeta.refreshing && <span className="refreshing">refreshing status…</span>}
+            {statusMeta.backendUnavailable && <span className="status-warn">status backend unavailable</span>}
+            <span>updated {displayDateTime(statusMeta.updatedAt)}</span>
+          </div>
 
           <form className="search" onSubmit={submitSearch}>
             <span className="sigil">▮</span>
@@ -335,6 +434,7 @@ function App() {
                     key={s.id}
                     svc={s}
                     status={statuses[s.id]}
+                    lastChecked={s.lastChecked || statusMeta.updatedAt}
                     editing={editing}
                     dimmed={query ? !isMatch(s) : false}
                     matched={query ? isMatch(s) : false}

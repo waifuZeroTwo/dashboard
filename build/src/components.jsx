@@ -14,6 +14,14 @@ function monogram(name) {
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.trim().slice(0, 2).toUpperCase();
 }
+
+function displayDateTime(value) {
+  if (!value) return "never";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString([], { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
 function readImageFile(file, cb) {
   if (!file || !file.type.startsWith("image/")) return;
   const r = new FileReader();
@@ -114,11 +122,11 @@ function Typewriter({ items, typeMs = 70, holdMs = 1700, delMs = 38 }) {
 }
 
 function StatusDot({ state }) {
-  const cls = state === "up" ? "up" : state === "down" ? "down" : state === "checking" ? "checking" : "off";
-  return <span className={"dot " + cls} title={"status: " + (state || "off")}></span>;
+  const cls = state === "online" || state === "up" ? "up" : state === "degraded" ? "degraded" : state === "offline" || state === "down" ? "down" : state === "checking" ? "checking" : "unknown";
+  return <span className={"dot " + cls} title={"status: " + (state || "unknown")}></span>;
 }
 
-function ServiceTile({ svc, status, editing, dimmed, matched, newTab, unlocked, onEdit, onDelete, onIcon }) {
+function ServiceTile({ svc, status, lastChecked, editing, dimmed, matched, newTab, unlocked, onEdit, onDelete, onIcon }) {
   const [drag, setDrag] = useState(false);
 
   const onDrop = (e) => {
@@ -159,6 +167,7 @@ function ServiceTile({ svc, status, editing, dimmed, matched, newTab, unlocked, 
           <span className="caret">›</span>
         </div>
         <div className="host">{hostOf(svc.url)}</div>
+        <div className="last-checked">checked {displayDateTime(lastChecked)}</div>
       </div>
 
       {editing && (
