@@ -1,6 +1,6 @@
 # ZeroTwo Systems  -  request backend
 
-A tiny, zero-dependency Node service that powers the dashboard's **Request access**
+A tiny, zero-dependency Node service (with its own `npm start` and `npm test` commands) that powers the dashboard's **Request access**
 panel and the operator **inbox**. It is what actually makes "one request per day,
 no botting, no crashing" *true*  -  the in-page limit is only a soft deterrent.
 
@@ -31,10 +31,13 @@ printf '%s' 'your operator passphrase' | shasum -a 256
 ## 2. Run it (behind nginx, on localhost)
 
 ```sh
+cd backend
+npm start
+# or, from the repository root:
 OPERATOR_KEY_SHA256=<your-hash> PORT=8787 DATA_DIR=/var/lib/zerotwo node backend/server.js
 ```
 
-Requests are written to `DATA_DIR/requests.json`; rate state to `ratelimit.json`.
+Requests are written to `DATA_DIR/requests.json`; rate state to `ratelimit.json`. Run `npm test` in `backend/` to start an isolated test server and verify submissions, CORS, rate limiting, auth, resolution, and persistence.
 
 ### Env vars
 
@@ -95,7 +98,8 @@ mode** (localStorage) so you can preview the flow.
 | POST   | `/api/request`          | public    | submit an account request        |
 | GET    | `/api/requests`         | Bearer    | operator: list all requests      |
 | POST   | `/api/request/resolve`  | Bearer    | operator: approve/deny/delete    |
-| GET    | `/api/health`           | public    | liveness check                   |
+| GET    | `/api/health`           | public    | liveness and queue summary       |
+| GET    | `/api/request`          | public    | capability check and service list |
 
 ## Tuning
 
