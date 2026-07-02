@@ -29,7 +29,7 @@ function readImageFile(file, cb) {
   r.readAsDataURL(file);
 }
 
-const DARLING_IMG = "";
+const DARLING_IMG = "ZeroTwo.gif";
 const DARLING_IMG_KEY = "zerotwo.darling.img.v1";
 
 function DarlingBanner({ unlocked, newTab }) {
