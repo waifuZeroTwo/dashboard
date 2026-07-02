@@ -6,13 +6,80 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";
 const DEMO_STORE = "zerotwo.requests.demo.v1";
 
+const DEFAULT_API_BASE = "https://api.zerotwosystems.com";
+const ACCESS_REQUEST_TIMEOUT_MS = 15000;
+
+function normalizeApiBase(base) {
+  const trimmed = (base || "").trim().replace(/\/+$/, "");
+  return trimmed || DEFAULT_API_BASE;
+}
+
 const API_BASE = (function () {
   try {
     const m = document.querySelector('meta[name="zerotwo-api-base"]');
-    return ((m && m.getAttribute("content")) || "").trim().replace(/\/+$/, "");
-  } catch (e) { return ""; }
+    return normalizeApiBase(m && m.getAttribute("content"));
+  } catch (e) { return DEFAULT_API_BASE; }
 })();
-const apiUrl = (p) => API_BASE + p;
+const apiUrl = (p) => API_BASE + (p[0] === "/" ? p : "/" + p);
+
+class ApiError extends Error {
+  constructor(status, data) {
+    super((data && (data.error || data.message)) || `API request failed with status ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data || {};
+  }
+}
+
+class BackendUnavailableError extends Error {
+  constructor(cause) {
+    super("backend unavailable");
+    this.name = "BackendUnavailableError";
+    this.cause = cause;
+  }
+}
+
+async function readJsonSafe(response) {
+  try {
+    const text = await response.text();
+    if (!text) return {};
+    return JSON.parse(text);
+  } catch (e) {
+    return {};
+  }
+}
+
+async function requestJson(path, options = {}) {
+  const method = options.method || "GET";
+  const headers = { ...(options.headers || {}) };
+  const init = { ...options, method, headers };
+  let timeout;
+  let controller;
+
+  if (Object.prototype.hasOwnProperty.call(init, "json")) {
+    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+    init.body = JSON.stringify(init.json);
+    delete init.json;
+  }
+
+  if (path === "/access-request") {
+    controller = new AbortController();
+    init.signal = controller.signal;
+    timeout = setTimeout(() => controller.abort(), ACCESS_REQUEST_TIMEOUT_MS);
+  }
+
+  try {
+    const response = await fetch(apiUrl(path), init);
+    const data = await readJsonSafe(response);
+    if (!response.ok) throw new ApiError(response.status, data);
+    return data;
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new BackendUnavailableError(e);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 
 function setCookie(name, val, ms) {
   try {
@@ -47,15 +114,6 @@ function demoSave(arr) { try { localStorage.setItem(DEMO_STORE, JSON.stringify(a
 
 function isAbsent(status) { return status === 404 || status === 405 || status === 501 || status === 502; }
 
-function demoSubmit(payload) {
-  const arr = demoList();
-  arr.unshift({
-    id: "demo_" + Date.now().toString(36),
-    ...payload, ip: "demo", ts: Date.now(), status: "pending",
-  });
-  demoSave(arr);
-  return { ok: true, demo: true };
-}
 function demoResolve(id, action) {
   let arr = demoList();
   if (action === "delete") arr = arr.filter((x) => x.id !== id);
@@ -66,49 +124,55 @@ function demoResolve(id, action) {
 
 const api = {
   async submit(payload) {
+    const body = {
+      service: payload.service,
+      desiredUsername: payload.desiredUsername,
+      contact: payload.contact,
+      howKnow: payload.howKnow,
+      note: payload.note,
+    };
+
     try {
-      const r = await fetch(apiUrl("/api/request"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (isAbsent(r.status)) return demoSubmit(payload);
-      if (r.status === 429) { const j = await r.json().catch(() => ({})); return { ok: false, rate: true, retryAfter: j.retryAfter || DAY_MS / 1000 }; }
-      if (r.status === 503) return { ok: false, busy: true };
-      if (!r.ok) return { ok: false, error: true };
-      const j = await r.json().catch(() => ({}));
-      return { ok: true, id: j.id };
+      const j = await requestJson("/access-request", { method: "POST", json: body });
+      if (j && j.ok === true) return { ok: true, id: j.id };
+      return { ok: false, error: true };
     } catch (e) {
-      return demoSubmit(payload);
+      if (e instanceof BackendUnavailableError) return { ok: false, backend: true };
+      if (e instanceof ApiError) {
+        if (e.status === 429) return { ok: false, rate: true, retryAfter: e.data.retryAfter || DAY_MS / 1000 };
+        if (e.status === 503) return { ok: false, busy: true };
+        return { ok: false, error: true, status: e.status };
+      }
+      return { ok: false, backend: true };
     }
   },
   async list(key) {
     try {
-      const r = await fetch(apiUrl("/api/requests"), { headers: { Authorization: "Bearer " + (key || "") } });
-      if (isAbsent(r.status)) return { ok: true, demo: true, requests: demoList() };
-      if (r.status === 401) return { ok: false, unauth: true };
-      if (!r.ok) return { ok: false };
-      const j = await r.json();
+      const j = await requestJson("/api/requests", { headers: { Authorization: "Bearer " + (key || "") } });
       return { ok: true, requests: j.requests || [] };
     } catch (e) {
+      if (e instanceof ApiError) {
+        if (isAbsent(e.status)) return { ok: true, demo: true, requests: demoList() };
+        if (e.status === 401) return { ok: false, unauth: true };
+      }
       return { ok: true, demo: true, requests: demoList() };
     }
   },
   async resolve(key, id, action) {
     try {
-      const r = await fetch(apiUrl("/api/request/resolve"), {
+      await requestJson("/api/request/resolve", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + (key || "") },
-        body: JSON.stringify({ id, action }),
+        headers: { Authorization: "Bearer " + (key || "") },
+        json: { id, action },
       });
-      if (isAbsent(r.status)) return demoResolve(id, action);
-      return { ok: r.ok };
+      return { ok: true };
     } catch (e) {
-      return demoResolve(id, action);
+      if (e instanceof ApiError && isAbsent(e.status)) return demoResolve(id, action);
+      if (e instanceof BackendUnavailableError) return demoResolve(id, action);
+      return { ok: false };
     }
   },
 };
-
 function relTime(ts) {
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60) return s + "s ago";
@@ -157,21 +221,20 @@ function RequestPanel({ open, onClose }) {
     if (!validate()) return;
     const last = lastRequestAt();
     if (last + DAY_MS - Date.now() > 0) { setRemaining(last + DAY_MS - Date.now()); setState("blocked"); return; }
-    if (hp || Date.now() - openedAt.current < 1200) { markRequested(); setState("done"); return; }
+    if (hp || Date.now() - openedAt.current < 1200) { markRequested(); setRemaining(DAY_MS); setState("blocked"); return; }
 
     const payload = {
       service: f.service,
-      username: f.username.trim().slice(0, 60),
+      desiredUsername: f.username.trim().slice(0, 60),
       contact: f.contact.trim().slice(0, 80),
-      referral: f.referral.trim().slice(0, 200),
+      howKnow: f.referral.trim().slice(0, 200),
       note: f.note.trim().slice(0, 500),
-      website: hp,
-      elapsed: Date.now() - openedAt.current,
     };
     const res = await api.submit(payload);
     if (res.ok) { markRequested(); setDemo(!!res.demo); setState("done"); }
     else if (res.rate) { setRemaining((res.retryAfter || 0) * 1000); setState("blocked"); }
     else if (res.busy) setState("busy");
+    else if (res.backend) setErrs({ form: "backend unavailable — request was not sent" });
     else setErrs({ form: "something went wrong  -  try again later." });
   };
 

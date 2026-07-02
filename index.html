@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZeroTwo Systems  -  HomeLab Nexus</title>
 
-  <meta name="zerotwo-api-base" content="https://api.zerotwosystems.com">
+  <meta name="zerotwo-api-base" content="" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -2263,15 +2263,79 @@ const REQ_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";
 const DEMO_STORE = "zerotwo.requests.demo.v1";
+const DEFAULT_API_BASE = "https://api.zerotwosystems.com";
+const ACCESS_REQUEST_TIMEOUT_MS = 15000;
+function normalizeApiBase(base) {
+  const trimmed = (base || "").trim().replace(/\/+$/, "");
+  return trimmed || DEFAULT_API_BASE;
+}
 const API_BASE = function () {
   try {
     const m = document.querySelector('meta[name="zerotwo-api-base"]');
-    return (m && m.getAttribute("content") || "").trim().replace(/\/+$/, "");
+    return normalizeApiBase(m && m.getAttribute("content"));
   } catch (e) {
-    return "";
+    return DEFAULT_API_BASE;
   }
 }();
-const apiUrl = p => API_BASE + p;
+const apiUrl = p => API_BASE + (p[0] === "/" ? p : "/" + p);
+class ApiError extends Error {
+  constructor(status, data) {
+    super(data && (data.error || data.message) || `API request failed with status ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data || {};
+  }
+}
+class BackendUnavailableError extends Error {
+  constructor(cause) {
+    super("backend unavailable");
+    this.name = "BackendUnavailableError";
+    this.cause = cause;
+  }
+}
+async function readJsonSafe(response) {
+  try {
+    const text = await response.text();
+    if (!text) return {};
+    return JSON.parse(text);
+  } catch (e) {
+    return {};
+  }
+}
+async function requestJson(path, options = {}) {
+  const method = options.method || "GET";
+  const headers = {
+    ...(options.headers || {})
+  };
+  const init = {
+    ...options,
+    method,
+    headers
+  };
+  let timeout;
+  let controller;
+  if (Object.prototype.hasOwnProperty.call(init, "json")) {
+    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+    init.body = JSON.stringify(init.json);
+    delete init.json;
+  }
+  if (path === "/access-request") {
+    controller = new AbortController();
+    init.signal = controller.signal;
+    timeout = setTimeout(() => controller.abort(), ACCESS_REQUEST_TIMEOUT_MS);
+  }
+  try {
+    const response = await fetch(apiUrl(path), init);
+    const data = await readJsonSafe(response);
+    if (!response.ok) throw new ApiError(response.status, data);
+    return data;
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new BackendUnavailableError(e);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 function setCookie(name, val, ms) {
   try {
     const exp = new Date(Date.now() + ms).toUTCString();
@@ -2318,21 +2382,6 @@ function demoSave(arr) {
 function isAbsent(status) {
   return status === 404 || status === 405 || status === 501 || status === 502;
 }
-function demoSubmit(payload) {
-  const arr = demoList();
-  arr.unshift({
-    id: "demo_" + Date.now().toString(36),
-    ...payload,
-    ip: "demo",
-    ts: Date.now(),
-    status: "pending"
-  });
-  demoSave(arr);
-  return {
-    ok: true,
-    demo: true
-  };
-}
 function demoResolve(id, action) {
   let arr = demoList();
   if (action === "delete") arr = arr.filter(x => x.id !== id);else arr = arr.map(x => x.id === id ? {
@@ -2347,65 +2396,76 @@ function demoResolve(id, action) {
 }
 const api = {
   async submit(payload) {
+    const body = {
+      service: payload.service,
+      desiredUsername: payload.desiredUsername,
+      contact: payload.contact,
+      howKnow: payload.howKnow,
+      note: payload.note
+    };
     try {
-      const r = await fetch(apiUrl("/api/request"), {
+      const j = await requestJson("/access-request", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+        json: body
       });
-      if (isAbsent(r.status)) return demoSubmit(payload);
-      if (r.status === 429) {
-        const j = await r.json().catch(() => ({}));
-        return {
-          ok: false,
-          rate: true,
-          retryAfter: j.retryAfter || DAY_MS / 1000
-        };
-      }
-      if (r.status === 503) return {
-        ok: false,
-        busy: true
-      };
-      if (!r.ok) return {
-        ok: false,
-        error: true
-      };
-      const j = await r.json().catch(() => ({}));
-      return {
+      if (j && j.ok === true) return {
         ok: true,
         id: j.id
       };
+      return {
+        ok: false,
+        error: true
+      };
     } catch (e) {
-      return demoSubmit(payload);
+      if (e instanceof BackendUnavailableError) return {
+        ok: false,
+        backend: true
+      };
+      if (e instanceof ApiError) {
+        if (e.status === 429) return {
+          ok: false,
+          rate: true,
+          retryAfter: e.data.retryAfter || DAY_MS / 1000
+        };
+        if (e.status === 503) return {
+          ok: false,
+          busy: true
+        };
+        return {
+          ok: false,
+          error: true,
+          status: e.status
+        };
+      }
+      return {
+        ok: false,
+        backend: true
+      };
     }
   },
   async list(key) {
     try {
-      const r = await fetch(apiUrl("/api/requests"), {
+      const j = await requestJson("/api/requests", {
         headers: {
           Authorization: "Bearer " + (key || "")
         }
       });
-      if (isAbsent(r.status)) return {
-        ok: true,
-        demo: true,
-        requests: demoList()
-      };
-      if (r.status === 401) return {
-        ok: false,
-        unauth: true
-      };
-      if (!r.ok) return {
-        ok: false
-      };
-      const j = await r.json();
       return {
         ok: true,
         requests: j.requests || []
       };
     } catch (e) {
+      if (e instanceof ApiError) {
+        if (isAbsent(e.status)) return {
+          ok: true,
+          demo: true,
+          requests: demoList()
+        };
+        if (e.status === 401) return {
+          ok: false,
+          unauth: true
+        };
+      }
       return {
         ok: true,
         demo: true,
@@ -2415,23 +2475,25 @@ const api = {
   },
   async resolve(key, id, action) {
     try {
-      const r = await fetch(apiUrl("/api/request/resolve"), {
+      await requestJson("/api/request/resolve", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: "Bearer " + (key || "")
         },
-        body: JSON.stringify({
+        json: {
           id,
           action
-        })
+        }
       });
-      if (isAbsent(r.status)) return demoResolve(id, action);
       return {
-        ok: r.ok
+        ok: true
       };
     } catch (e) {
-      return demoResolve(id, action);
+      if (e instanceof ApiError && isAbsent(e.status)) return demoResolve(id, action);
+      if (e instanceof BackendUnavailableError) return demoResolve(id, action);
+      return {
+        ok: false
+      };
     }
   }
 };
@@ -2501,17 +2563,16 @@ function RequestPanel({
     }
     if (hp || Date.now() - openedAt.current < 1200) {
       markRequested();
-      setState("done");
+      setRemaining(DAY_MS);
+      setState("blocked");
       return;
     }
     const payload = {
       service: f.service,
-      username: f.username.trim().slice(0, 60),
+      desiredUsername: f.username.trim().slice(0, 60),
       contact: f.contact.trim().slice(0, 80),
-      referral: f.referral.trim().slice(0, 200),
-      note: f.note.trim().slice(0, 500),
-      website: hp,
-      elapsed: Date.now() - openedAt.current
+      howKnow: f.referral.trim().slice(0, 200),
+      note: f.note.trim().slice(0, 500)
     };
     const res = await api.submit(payload);
     if (res.ok) {
@@ -2521,7 +2582,9 @@ function RequestPanel({
     } else if (res.rate) {
       setRemaining((res.retryAfter || 0) * 1000);
       setState("blocked");
-    } else if (res.busy) setState("busy");else setErrs({
+    } else if (res.busy) setState("busy");else if (res.backend) setErrs({
+      form: "backend unavailable — request was not sent"
+    });else setErrs({
       form: "something went wrong  -  try again later."
     });
   };
@@ -3231,7 +3294,7 @@ const {
 const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
-const OPERATOR_KEY_SHA256 = "01922ae6ef59603ba3777c8e139f02a9198dc149f85f038f8f058ba4607c8830";
+const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
 const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽", "محور المختبر المنزلي", "Узел домашней лаборатории", "홈랩 넥서스", "ศูนย์กลางโฮมแล็บ", "Kitovu cha Maabara ya Nyumbani", "Kotilaboratorion Solmukohta"];
 const SEERR_URL = "https://seerr.zerotwosystems.com/";
 const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
