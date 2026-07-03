@@ -126,7 +126,9 @@ function normalizeRequest(r) {
   const status = normalizeRequestStatus(r && r.status);
   const username = (r && (r.desiredUsername || r.desired_username || r.username)) || "";
   const referral = (r && (r.howKnow || r.how_know || r.referral)) || "";
-  const createdAt = (r && (r.createdAt || r.created_at || r.timestamp)) || null;
+  const timeCandidates = r ? [r.createdAt, r.created_at, r.timestamp, r.ts] : [];
+  const createdAt = timeCandidates.find((value) => value !== null && value !== undefined && value !== "") || null;
+  const ts = timeCandidates.map(toRequestTime).find((value) => value !== null) ?? null;
 
   return {
     id: r && r.id,
@@ -139,7 +141,7 @@ function normalizeRequest(r) {
     note: (r && (r.note || r.message)) || "",
     ip: (r && r.ip) || "",
     createdAt,
-    ts: toRequestTime(r && (r.createdAt || r.created_at || r.timestamp || r.ts)),
+    ts,
     status,
   };
 }
@@ -150,13 +152,16 @@ function normalizeRequests(requests) {
     .sort((a, b) => (b.ts || 0) - (a.ts || 0));
 }
 
-function relTime(ts) {
-  if (typeof ts !== "number" || !Number.isFinite(ts)) return "unknown";
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60) return s + "s ago";
-  if (s < 3600) return Math.floor(s / 60) + "m ago";
-  if (s < 86400) return Math.floor(s / 3600) + "h ago";
-  return Math.floor(s / 86400) + "d ago";
+function relTime(value) {
+  const ts = toRequestTime(value);
+  if (ts === null) return "unknown";
+
+  const seconds = Math.floor((Date.now() - ts) / 1000);
+  if (!Number.isFinite(seconds)) return "unknown";
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+  if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+  return Math.floor(seconds / 86400) + "d ago";
 }
 function fmtCountdown(ms) {
   const h = Math.floor(ms / 3600000);
