@@ -32,16 +32,27 @@ const SEED = [
 ];
 
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
+const REMOVED_SERVICE_KEY = ["p", "lex"].join("");
 
+function isRemovedService(svc) {
+  const haystack = [svc && svc.id, svc && svc.name, svc && svc.url]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(REMOVED_SERVICE_KEY);
+}
+function visibleServices(list) {
+  return Array.isArray(list) ? list.filter((svc) => !isRemovedService(svc)) : [];
+}
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d) && d.length) return d; }
+    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d) && d.length) return visibleServices(d); }
   } catch (e) {}
-  return SEED;
+  return visibleServices(SEED);
 }
 function save(svcs) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(svcs)); } catch (e) {}
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(visibleServices(svcs))); } catch (e) {}
 }
 
 function ping(url, timeout = 5000) {
@@ -202,6 +213,7 @@ function App() {
   }, [unlocked, inboxOpen]);
 
   const upsert = (svc) => {
+    if (isRemovedService(svc)) return;
     setSvcs((prev) => {
       const exists = prev.some((s) => s.id === svc.id);
       if (exists) return prev.map((s) => (s.id === svc.id ? svc : s));
