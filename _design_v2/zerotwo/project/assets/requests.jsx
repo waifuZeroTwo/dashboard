@@ -93,10 +93,15 @@ const api = {
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + (key || "") },
         body: JSON.stringify({ id, action }),
       });
-      if (isAbsent(r.status)) return demoResolve(id, action);
-      return { ok: r.ok };
+      if (!r.ok) {
+        const body = await r.text().catch(() => "");
+        console.error("request action failed", { action, id, status: r.status, body });
+        return { ok: false, status: r.status, body };
+      }
+      return { ok: true };
     } catch (e) {
-      return demoResolve(id, action);
+      console.error("request action failed", { action, id, status: 0, body: e && e.message ? e.message : "" });
+      return { ok: false, status: 0, body: e && e.message ? e.message : "" };
     }
   },
 };
@@ -351,7 +356,8 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
   useEffect(() => { if (open) reload(); }, [open, reload]);
 
   const act = async (id, action) => {
-    await api.resolve(operatorKey, id, action);
+    const res = await api.resolve(operatorKey, id, action);
+    if (!res.ok) return;
     reload();
   };
 
