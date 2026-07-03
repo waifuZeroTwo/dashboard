@@ -3504,13 +3504,8 @@ function sanitizeServiceUrl(svc) {
     availability: "Public launch URL pending"
   };
 }
-const REMOVED_SERVICE_KEY = ["p", "lex"].join("");
-function isRemovedService(svc) {
-  const haystack = [svc && svc.id, svc && svc.name, svc && svc.url].filter(Boolean).join(" ").toLowerCase();
-  return haystack.includes(REMOVED_SERVICE_KEY);
-}
 function visibleServices(list) {
-  return Array.isArray(list) ? list.filter(svc => !isRemovedService(svc)) : [];
+  return Array.isArray(list) ? list.filter(Boolean) : [];
 }
 function migrate(list) {
   let out = visibleServices(list);
@@ -4020,9 +4015,6 @@ function App() {
     return true;
   };
   const upsert = async svc => {
-    if (isRemovedService(svc)) return {
-      ok: false
-    };
     const id = svc.id || "svc_" + Date.now().toString(36);
     const existing = svcsRef.current.find(s => s.id === id);
     const nextSvc = stableServiceFields({
