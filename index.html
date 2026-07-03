@@ -3764,24 +3764,18 @@ function App() {
   });
   const searchRef = useRef(null);
   const svcsRef = useRef(svcs);
-  const servicesLoadedRef = useRef(false);
   useEffect(() => {
     svcsRef.current = svcs;
-  }, [svcs]);
-  useEffect(() => {
-    if (servicesLoadedRef.current) save(svcs);
   }, [svcs]);
   useEffect(() => {
     let alive = true;
     getServices().then(backendServices => {
       if (!alive) return;
-      servicesLoadedRef.current = true;
       setSvcs(backendServices);
       save(backendServices);
     }).catch(err => {
       if (!alive) return;
       if (err && err.status) console.error("[services] backend load failed", err.status, err.body || "");else console.error("[services] backend load failed", err);
-      servicesLoadedRef.current = true;
       setSvcs(load());
     });
     return () => {
@@ -3956,30 +3950,95 @@ function App() {
       alive = false;
     };
   }, [unlocked, inboxOpen]);
-  const upsert = svc => {
-    if (isRemovedService(svc)) return;
-    setSvcs(prev => {
-      const exists = prev.some(s => s.id === svc.id);
-      if (exists) return prev.map(s => s.id === svc.id ? svc : s);
-      return [...prev, {
-        ...svc,
-        id: svc.id || "svc_" + Date.now().toString(36)
-      }];
-    });
-    setModal(null);
-  };
-  const del = id => {
-    if (confirm("Delete this node?")) setSvcs(prev => prev.filter(s => s.id !== id));
-  };
-  const setIcon = (id, icon) => setSvcs(prev => prev.map(s => s.id === id ? {
-    ...s,
-    icon
-  } : s));
-  const resetAll = () => {
-    if (confirm("Reset dashboard to default services? Your custom tiles and logos will be lost.")) {
-      setSvcs(SEED);
-      save(SEED);
+  const saveServices = async nextServices => {
+    let response;
+    let bodyText = "";
+    let payload = null;
+    try {
+      response = await fetch(apiUrl("/admin/services"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + operatorKeyRef.current
+        },
+        body: JSON.stringify({
+          services: nextServices
+        })
+      });
+      bodyText = await response.text();
+      if (bodyText) {
+        try {
+          payload = JSON.parse(bodyText);
+        } catch (e) {
+          payload = bodyText;
+        }
+      }
+      if (!response.ok) {
+        console.error("service save failed", {
+          status: response.status,
+          body: payload || bodyText
+        });
+        return {
+          ok: false
+        };
+      }
+      if (!payload || payload.ok !== true) {
+        console.error("service save failed", {
+          status: response.status,
+          body: payload || bodyText
+        });
+        return {
+          ok: false
+        };
+      }
+      const services = Array.isArray(payload.services) ? migrate(payload.services.map(normalizeService).filter(Boolean)) : await getServices();
+      return {
+        ok: true,
+        services
+      };
+    } catch (err) {
+      console.error("service save failed", {
+        status: response && response.status,
+        body: payload || bodyText || err
+      });
+      return {
+        ok: false
+      };
     }
+  };
+  const commitServices = async nextServices => {
+    const res = await saveServices(nextServices);
+    if (!res.ok) return false;
+    const committed = Array.isArray(res.services) ? res.services : nextServices;
+    setSvcs(committed);
+    save(committed);
+    return true;
+  };
+  const upsert = async svc => {
+    if (isRemovedService(svc)) return;
+    const nextSvc = {
+      ...svc,
+      id: svc.id || "svc_" + Date.now().toString(36)
+    };
+    const exists = svcsRef.current.some(s => s.id === nextSvc.id);
+    const nextServices = exists ? svcsRef.current.map(s => s.id === nextSvc.id ? nextSvc : s) : [...svcsRef.current, nextSvc];
+    if (await commitServices(nextServices)) setModal(null);
+  };
+  const del = async id => {
+    if (!confirm("Delete this node?")) return;
+    const nextServices = svcsRef.current.filter(s => s.id !== id);
+    await commitServices(nextServices);
+  };
+  const setIcon = async (id, icon) => {
+    const nextServices = svcsRef.current.map(s => s.id === id ? {
+      ...s,
+      icon
+    } : s);
+    await commitServices(nextServices);
+  };
+  const resetAll = async () => {
+    if (!confirm("Reset dashboard to default services? Your custom tiles and logos will be lost.")) return;
+    await commitServices(SEED);
   };
   const submitSearch = e => {
     e.preventDefault();
