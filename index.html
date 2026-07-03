@@ -2520,70 +2520,64 @@ const api = {
     }
   },
   async updateRequestStatus(key, id, status) {
-    const operatorKey = (key || "").trim();
     if (!id) {
-      console.error("Missing request id");
+      console.error("[requests] missing request id for status update");
       return {
         ok: false
       };
     }
-    try {
-      const response = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${operatorKey}`
-        },
-        body: JSON.stringify({
-          status
-        })
-      });
-      if (!response.ok) {
-        console.error("Request status update failed:", response.status, await response.text());
-        return {
-          ok: false
-        };
-      }
-      return {
-        ok: true
-      };
-    } catch (e) {
-      console.error("Request status update failed:", e);
+    const operatorKey = (key || "").trim();
+    console.log("[requests] PATCH", id, status);
+    const res = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${operatorKey}`
+      },
+      body: JSON.stringify({
+        status
+      })
+    });
+    if (!res.ok) {
+      console.error("[requests] status update failed", res.status, await res.text());
       return {
         ok: false
       };
     }
+    const data = await res.json();
+    console.log("[requests] status update ok", data);
+    return {
+      ok: true,
+      data
+    };
   },
   async deleteRequest(key, id) {
-    const operatorKey = (key || "").trim();
     if (!id) {
-      console.error("Missing request id");
+      console.error("[requests] missing request id for delete");
       return {
         ok: false
       };
     }
-    try {
-      const response = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${operatorKey}`
-        }
-      });
-      if (!response.ok) {
-        console.error("Request delete failed:", response.status, await response.text());
-        return {
-          ok: false
-        };
+    const operatorKey = (key || "").trim();
+    console.log("[requests] DELETE", id);
+    const res = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${operatorKey}`
       }
-      return {
-        ok: true
-      };
-    } catch (e) {
-      console.error("Request delete failed:", e);
+    });
+    if (!res.ok) {
+      console.error("[requests] delete failed", res.status, await res.text());
       return {
         ok: false
       };
     }
+    const data = await res.json();
+    console.log("[requests] delete ok", data);
+    return {
+      ok: true,
+      data
+    };
   }
 };
 function relTime(ts) {
@@ -2832,13 +2826,13 @@ function OperatorRequests({
   useEffect(() => {
     if (open) reload();
   }, [open, reload]);
-  const updateStatus = async (id, status) => {
+  const updateRequestStatus = async (id, status) => {
     const res = await api.updateRequestStatus(operatorKey, id, status);
-    if (res.ok === true) reload();
+    if (res.ok) await reload();
   };
-  const removeRequest = async id => {
+  const deleteRequest = async id => {
     const res = await api.deleteRequest(operatorKey, id);
-    if (res.ok === true) reload();
+    if (res.ok) await reload();
   };
   if (!open) return null;
   const shown = reqs.filter(r => filter === "all" ? true : r.status === (filter === "pending" ? "pending" : filter));
@@ -2921,26 +2915,29 @@ function OperatorRequests({
   }, r.status !== "approved" && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "btn on",
-    onClick: event => {
+    onClick: async event => {
       event.preventDefault();
       event.stopPropagation();
-      updateStatus(r.id, "approved");
+      console.log("[requests] approve clicked", r.id);
+      await updateRequestStatus(r.id, "approved");
     }
   }, "approve"), r.status !== "denied" && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "btn",
-    onClick: event => {
+    onClick: async event => {
       event.preventDefault();
       event.stopPropagation();
-      updateStatus(r.id, "denied");
+      console.log("[requests] deny clicked", r.id);
+      await updateRequestStatus(r.id, "denied");
     }
   }, "deny"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "btn danger",
-    onClick: event => {
+    onClick: async event => {
       event.preventDefault();
       event.stopPropagation();
-      removeRequest(r.id);
+      console.log("[requests] delete clicked", r.id);
+      await deleteRequest(r.id);
     }
   }, "delete"))))), /*#__PURE__*/React.createElement("div", {
     className: "sheet-foot"

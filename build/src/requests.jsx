@@ -166,54 +166,57 @@ const api = {
     }
   },
   async updateRequestStatus(key, id, status) {
-    const operatorKey = (key || "").trim();
     if (!id) {
-      console.error("Missing request id");
+      console.error("[requests] missing request id for status update");
       return { ok: false };
     }
 
-    try {
-      const response = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${operatorKey}`
-        },
-        body: JSON.stringify({ status })
-      });
-      if (!response.ok) {
-        console.error("Request status update failed:", response.status, await response.text());
-        return { ok: false };
-      }
-      return { ok: true };
-    } catch (e) {
-      console.error("Request status update failed:", e);
+    const operatorKey = (key || "").trim();
+    console.log("[requests] PATCH", id, status);
+
+    const res = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${operatorKey}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      console.error("[requests] status update failed", res.status, await res.text());
       return { ok: false };
     }
+
+    const data = await res.json();
+    console.log("[requests] status update ok", data);
+    return { ok: true, data };
   },
+
   async deleteRequest(key, id) {
-    const operatorKey = (key || "").trim();
     if (!id) {
-      console.error("Missing request id");
+      console.error("[requests] missing request id for delete");
       return { ok: false };
     }
 
-    try {
-      const response = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${operatorKey}`
-        }
-      });
-      if (!response.ok) {
-        console.error("Request delete failed:", response.status, await response.text());
-        return { ok: false };
-      }
-      return { ok: true };
-    } catch (e) {
-      console.error("Request delete failed:", e);
+    const operatorKey = (key || "").trim();
+    console.log("[requests] DELETE", id);
+
+    const res = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${operatorKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      console.error("[requests] delete failed", res.status, await res.text());
       return { ok: false };
     }
+
+    const data = await res.json();
+    console.log("[requests] delete ok", data);
+    return { ok: true, data };
   },
 };
 function relTime(ts) {
@@ -409,14 +412,14 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
 
   useEffect(() => { if (open) reload(); }, [open, reload]);
 
-  const updateStatus = async (id, status) => {
+  const updateRequestStatus = async (id, status) => {
     const res = await api.updateRequestStatus(operatorKey, id, status);
-    if (res.ok === true) reload();
+    if (res.ok) await reload();
   };
 
-  const removeRequest = async (id) => {
+  const deleteRequest = async (id) => {
     const res = await api.deleteRequest(operatorKey, id);
-    if (res.ok === true) reload();
+    if (res.ok) await reload();
   };
 
   if (!open) return null;
@@ -463,9 +466,48 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
               {r.ip && r.ip !== "demo" && <div className="rc-row"><span className="k">ip</span><span className="v">{r.ip}</span></div>}
               {r.note && <div className="rc-note">{r.note}</div>}
               <div className="rc-actions">
-                {r.status !== "approved" && <button type="button" className="btn on" onClick={(event) => { event.preventDefault(); event.stopPropagation(); updateStatus(r.id, "approved"); }}>approve</button>}
-                {r.status !== "denied" && <button type="button" className="btn" onClick={(event) => { event.preventDefault(); event.stopPropagation(); updateStatus(r.id, "denied"); }}>deny</button>}
-                <button type="button" className="btn danger" onClick={(event) => { event.preventDefault(); event.stopPropagation(); removeRequest(r.id); }}>delete</button>
+                {r.status !== "approved" && (
+                  <button
+                    type="button"
+                    className="btn on"
+                    onClick={async (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      console.log("[requests] approve clicked", r.id);
+                      await updateRequestStatus(r.id, "approved");
+                    }}
+                  >
+                    approve
+                  </button>
+                )}
+
+                {r.status !== "denied" && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={async (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      console.log("[requests] deny clicked", r.id);
+                      await updateRequestStatus(r.id, "denied");
+                    }}
+                  >
+                    deny
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="btn danger"
+                  onClick={async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    console.log("[requests] delete clicked", r.id);
+                    await deleteRequest(r.id);
+                  }}
+                >
+                  delete
+                </button>
               </div>
             </div>
           ))}
