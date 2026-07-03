@@ -77,13 +77,13 @@ const api = {
   async list(key) {
     try {
       const r = await fetch("/admin/requests", { headers: { Authorization: "Bearer " + (key || "") } });
-      if (isAbsent(r.status)) return { ok: true, demo: true, requests: demoList() };
+      if (isAbsent(r.status)) return { ok: true, demo: true, requests: normalizeRequests(demoList()) };
       if (r.status === 401) return { ok: false, unauth: true };
       if (!r.ok) return { ok: false };
       const j = await r.json();
-      return { ok: true, requests: j.requests || [] };
+      return { ok: true, requests: normalizeRequests(j.requests) };
     } catch (e) {
-      return { ok: true, demo: true, requests: demoList() };
+      return { ok: true, demo: true, requests: normalizeRequests(demoList()) };
     }
   },
   async resolve(key, id, action) {
@@ -116,11 +116,14 @@ function toRequestTime(value) {
   return null;
 }
 
-function normalizeRequest(r) {
-  const rawStatus = r && r.status;
-  const status = rawStatus === "approved" || rawStatus === "denied"
-    ? rawStatus
+function normalizeRequestStatus(status) {
+  return status === "approved" || status === "denied" || status === "pending"
+    ? status
     : "pending";
+}
+
+function normalizeRequest(r) {
+  const status = normalizeRequestStatus(r && r.status);
   const username = (r && (r.desiredUsername || r.desired_username || r.username)) || "";
   const referral = (r && (r.howKnow || r.how_know || r.referral)) || "";
   const createdAt = (r && (r.createdAt || r.created_at || r.timestamp)) || null;
@@ -139,6 +142,12 @@ function normalizeRequest(r) {
     ts: toRequestTime(r && (r.createdAt || r.created_at || r.timestamp || r.ts)),
     status,
   };
+}
+
+function normalizeRequests(requests) {
+  return (Array.isArray(requests) ? requests : [])
+    .map(normalizeRequest)
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
 }
 
 function relTime(ts) {
@@ -329,7 +338,7 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
     if (res.unauth) { setUnauth(true); setReqs([]); return; }
     setUnauth(false);
     setDemo(!!res.demo);
-    const list = (res.requests || []).map(normalizeRequest).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const list = normalizeRequests(res.requests);
     setReqs(list);
     if (onCount) onCount(list.filter((r) => r.status === "pending").length);
   }, [operatorKey, onCount]);
@@ -402,4 +411,4 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
   );
 }
 
-Object.assign(window, { RequestPanel, OperatorRequests, requestApi: api, pendingCount: () => demoList().filter((r) => r.status === "pending").length });
+Object.assign(window, { RequestPanel, OperatorRequests, requestApi: api, pendingCount: () => normalizeRequests(demoList()).filter((r) => r.status === "pending").length });
