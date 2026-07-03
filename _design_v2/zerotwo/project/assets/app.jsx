@@ -1,7 +1,7 @@
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const STORE_KEY = "zerotwo.nexus.v1";
+const STORE_KEY = "zerotwo.nexus.v2";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
 
