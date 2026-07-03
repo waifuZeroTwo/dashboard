@@ -101,7 +101,48 @@ const api = {
   },
 };
 
+
+function toRequestTime(value) {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const numeric = Number(trimmed);
+    if (Number.isFinite(numeric)) return numeric;
+    const parsed = Date.parse(trimmed);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
+
+function normalizeRequest(r) {
+  const rawStatus = r && r.status;
+  const status = rawStatus === "approved" || rawStatus === "denied"
+    ? rawStatus
+    : "pending";
+  const username = (r && (r.desiredUsername || r.desired_username || r.username)) || "";
+  const referral = (r && (r.howKnow || r.how_know || r.referral)) || "";
+  const createdAt = (r && (r.createdAt || r.created_at || r.timestamp)) || null;
+
+  return {
+    id: r && r.id,
+    service: (r && r.service) || "",
+    desiredUsername: username,
+    username,
+    contact: (r && r.contact) || "",
+    howKnow: referral,
+    referral,
+    note: (r && (r.note || r.message)) || "",
+    ip: (r && r.ip) || "",
+    createdAt,
+    ts: toRequestTime(r && (r.createdAt || r.created_at || r.timestamp || r.ts)),
+    status,
+  };
+}
+
 function relTime(ts) {
+  if (typeof ts !== "number" || !Number.isFinite(ts)) return "unknown";
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60) return s + "s ago";
   if (s < 3600) return Math.floor(s / 60) + "m ago";
@@ -288,7 +329,7 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
     if (res.unauth) { setUnauth(true); setReqs([]); return; }
     setUnauth(false);
     setDemo(!!res.demo);
-    const list = (res.requests || []).slice().sort((a, b) => b.ts - a.ts);
+    const list = (res.requests || []).map(normalizeRequest).sort((a, b) => (b.ts || 0) - (a.ts || 0));
     setReqs(list);
     if (onCount) onCount(list.filter((r) => r.status === "pending").length);
   }, [operatorKey, onCount]);
