@@ -1913,7 +1913,7 @@ function ServiceTile({
     setDrag(false);
     if (!unlocked) return;
     const f = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) readImageFile(f, data => onIcon(svc.id, data));
+    if (f) readImageFile(f, data => onIcon && onIcon(svc.id, data));
   };
   const cls = ["tile"];
   if (drag) cls.push("dragover");
@@ -2023,7 +2023,8 @@ function EditModal({
       ...f,
       name: f.name.trim(),
       url,
-      category: (f.category || "OTHER").trim().toUpperCase()
+      category: (f.category || "OTHER").trim().toUpperCase(),
+      icon: typeof f.icon === "string" ? f.icon : ""
     });
     if (!res || !res.ok) setSaving(false);
   };
@@ -4043,7 +4044,16 @@ function App() {
       ...s,
       icon
     } : s);
-    await commitServices(nextServices);
+    const res = await saveServices(nextServices);
+    if (!res.ok) return {
+      ok: false
+    };
+    const committed = Array.isArray(res.services) ? res.services : nextServices;
+    setSvcs(committed);
+    save(committed);
+    return {
+      ok: true
+    };
   };
   const resetAll = async () => {
     if (!confirm("Reset dashboard to default services? Your custom tiles and logos will be lost.")) return;
