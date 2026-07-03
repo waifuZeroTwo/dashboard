@@ -2307,7 +2307,6 @@ const REQ_SERVICES = ["jellyfin", "seerr", "immich", "navidrome", "nextcloud"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOFT_KEY = "zerotwo.req.last.v1";
 const DEMO_STORE = "zerotwo.requests.demo.v1";
-const OPERATOR_KEY_STORAGE = "zt_operator_key";
 const DEFAULT_API_BASE = "https://api.zerotwosystems.com";
 const ACCESS_REQUEST_TIMEOUT_MS = 15000;
 function normalizeApiBase(base) {
@@ -2449,16 +2448,8 @@ const api = {
       note: payload.note
     };
     try {
-      let operatorKey = "";
-      try {
-        operatorKey = localStorage.getItem(OPERATOR_KEY_STORAGE) || "";
-      } catch (e) {}
-      const headers = operatorKey ? {
-        Authorization: `Bearer ${operatorKey}`
-      } : {};
       const j = await requestJson("/access-request", {
         method: "POST",
-        headers,
         json: body
       });
       if (j && j.ok === true) return {
@@ -2528,24 +2519,67 @@ const api = {
       };
     }
   },
-  async resolve(key, id, action) {
+  async updateRequestStatus(key, id, status) {
+    const operatorKey = (key || "").trim();
+    if (!id) {
+      console.error("Missing request id");
+      return {
+        ok: false
+      };
+    }
     try {
-      await requestJson("/api/request/resolve", {
-        method: "POST",
+      const response = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
+        method: "PATCH",
         headers: {
-          Authorization: "Bearer " + (key || "")
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${operatorKey}`
         },
-        json: {
-          id,
-          action
-        }
+        body: JSON.stringify({
+          status
+        })
       });
+      if (!response.ok) {
+        console.error("Request status update failed:", response.status, await response.text());
+        return {
+          ok: false
+        };
+      }
       return {
         ok: true
       };
     } catch (e) {
-      if (e instanceof ApiError && isAbsent(e.status)) return demoResolve(id, action);
-      if (e instanceof BackendUnavailableError) return demoResolve(id, action);
+      console.error("Request status update failed:", e);
+      return {
+        ok: false
+      };
+    }
+  },
+  async deleteRequest(key, id) {
+    const operatorKey = (key || "").trim();
+    if (!id) {
+      console.error("Missing request id");
+      return {
+        ok: false
+      };
+    }
+    try {
+      const response = await fetch(`${API_BASE}/admin/requests/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${operatorKey}`
+        }
+      });
+      if (!response.ok) {
+        console.error("Request delete failed:", response.status, await response.text());
+        return {
+          ok: false
+        };
+      }
+      return {
+        ok: true
+      };
+    } catch (e) {
+      console.error("Request delete failed:", e);
       return {
         ok: false
       };
@@ -2779,7 +2813,6 @@ function OperatorRequests({
   const [loading, setLoading] = useState(true);
   const [demo, setDemo] = useState(false);
   const [unauth, setUnauth] = useState(false);
-  const [backend, setBackend] = useState(false);
   const [filter, setFilter] = useState("pending");
   const reload = useCallback(async () => {
     setLoading(true);
@@ -2787,18 +2820,10 @@ function OperatorRequests({
     setLoading(false);
     if (res.unauth) {
       setUnauth(true);
-      setBackend(false);
-      setReqs([]);
-      return;
-    }
-    if (res.backend) {
-      setUnauth(false);
-      setBackend(true);
       setReqs([]);
       return;
     }
     setUnauth(false);
-    setBackend(false);
     setDemo(!!res.demo);
     const list = (res.requests || []).slice().sort((a, b) => b.ts - a.ts);
     setReqs(list);
@@ -2807,9 +2832,13 @@ function OperatorRequests({
   useEffect(() => {
     if (open) reload();
   }, [open, reload]);
-  const act = async (id, action) => {
-    await api.resolve(operatorKey, id, action);
-    reload();
+  const updateStatus = async (id, status) => {
+    const res = await api.updateRequestStatus(operatorKey, id, status);
+    if (res.ok === true) reload();
+  };
+  const removeRequest = async id => {
+    const res = await api.deleteRequest(operatorKey, id);
+    if (res.ok === true) reload();
   };
   if (!open) return null;
   const shown = reqs.filter(r => filter === "all" ? true : r.status === (filter === "pending" ? "pending" : filter));
@@ -2848,11 +2877,9 @@ function OperatorRequests({
     className: "req-empty"
   }, "loading\u2026"), !loading && unauth && /*#__PURE__*/React.createElement("div", {
     className: "req-empty"
-  }, "unauthorized  -  operator key rejected by backend."), !loading && backend && /*#__PURE__*/React.createElement("div", {
+  }, "unauthorized  -  operator key rejected by backend."), !loading && !unauth && shown.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "req-empty"
-  }, "backend unavailable  -  keeping saved operator key for later retry."), !loading && !unauth && !backend && shown.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "req-empty"
-  }, "no ", filter === "all" ? "" : filter, " requests."), !loading && !unauth && !backend && shown.map(r => /*#__PURE__*/React.createElement("div", {
+  }, "no ", filter === "all" ? "" : filter, " requests."), !loading && !unauth && shown.map(r => /*#__PURE__*/React.createElement("div", {
     className: "req-card s-" + r.status,
     key: r.id
   }, /*#__PURE__*/React.createElement("div", {
@@ -2892,14 +2919,29 @@ function OperatorRequests({
   }, r.note), /*#__PURE__*/React.createElement("div", {
     className: "rc-actions"
   }, r.status !== "approved" && /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "btn on",
-    onClick: () => act(r.id, "approve")
+    onClick: event => {
+      event.preventDefault();
+      event.stopPropagation();
+      updateStatus(r.id, "approved");
+    }
   }, "approve"), r.status !== "denied" && /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "btn",
-    onClick: () => act(r.id, "deny")
+    onClick: event => {
+      event.preventDefault();
+      event.stopPropagation();
+      updateStatus(r.id, "denied");
+    }
   }, "deny"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "btn danger",
-    onClick: () => act(r.id, "delete")
+    onClick: event => {
+      event.preventDefault();
+      event.stopPropagation();
+      removeRequest(r.id);
+    }
   }, "delete"))))), /*#__PURE__*/React.createElement("div", {
     className: "sheet-foot"
   }, demo && /*#__PURE__*/React.createElement("span", {
@@ -3358,7 +3400,8 @@ const {
 } = React;
 const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
-const OPERATOR_KEY_STORAGE = "zt_operator_key";
+const UNLOCK_KEY = "zerotwo.unlocked.v1";
+const OPERATOR_KEY_SESSION = "zerotwo.operatorKey.v1";
 const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽", "محور المختبر المنزلي", "Узел домашней лаборатории", "홈랩 넥서스", "ศูนย์กลางโฮมแล็บ", "Kitovu cha Maabara ya Nyumbani", "Kotilaboratorion Solmukohta"];
 const SEERR_URL = "https://seerr.zerotwosystems.com/";
 const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
@@ -3642,14 +3685,25 @@ function App() {
   const [q, setQ] = useState("");
   const [now, setNow] = useState(new Date());
   const [termOpen, setTermOpen] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => {
+    try {
+      return sessionStorage.getItem(UNLOCK_KEY) === "1" && !!sessionStorage.getItem(OPERATOR_KEY_SESSION);
+    } catch (e) {
+      return false;
+    }
+  });
   const [auth, setAuth] = useState(null);
   const [reqOpen, setReqOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [pendingN, setPendingN] = useState(0);
-  const [operatorBackendUnavailable, setOperatorBackendUnavailable] = useState(false);
-  const operatorKeyRef = useRef("");
+  const operatorKeyRef = useRef((() => {
+    try {
+      return sessionStorage.getItem(OPERATOR_KEY_SESSION) || "";
+    } catch (e) {
+      return "";
+    }
+  })());
   const bootRef = useRef(new Date());
   const [newTab, setNewTab] = useState(() => {
     const v = localStorage.getItem(NEWTAB_KEY);
@@ -3780,10 +3834,10 @@ function App() {
     const res = await window.requestApi.list(operatorKey);
     if (res.ok) {
       setUnlocked(true);
-      setOperatorBackendUnavailable(false);
       operatorKeyRef.current = operatorKey;
       try {
-        localStorage.setItem(OPERATOR_KEY_STORAGE, operatorKey);
+        sessionStorage.setItem(UNLOCK_KEY, "1");
+        sessionStorage.setItem(OPERATOR_KEY_SESSION, operatorKey);
       } catch (e) {}
       setPendingN((res.requests || []).filter(r => r.status === "pending").length);
       const then = auth && auth.then;
@@ -3805,53 +3859,14 @@ function App() {
   const lock = () => {
     setUnlocked(false);
     operatorKeyRef.current = "";
-    setOperatorBackendUnavailable(false);
     try {
-      localStorage.removeItem(OPERATOR_KEY_STORAGE);
+      sessionStorage.removeItem(UNLOCK_KEY);
+      sessionStorage.removeItem(OPERATOR_KEY_SESSION);
     } catch (e) {}
     setTermOpen(false);
     setEditing(false);
     setInboxOpen(false);
   };
-  useEffect(() => {
-    let alive = true;
-    let savedKey = "";
-    try {
-      savedKey = localStorage.getItem(OPERATOR_KEY_STORAGE) || "";
-    } catch (e) {}
-    if (!savedKey) return () => {
-      alive = false;
-    };
-    window.requestApi.list(savedKey).then(res => {
-      if (!alive) return;
-      if (res.ok) {
-        operatorKeyRef.current = savedKey;
-        setUnlocked(true);
-        setOperatorBackendUnavailable(false);
-        const list = res.requests || [];
-        setPendingN(list.filter(r => r.status === "pending").length);
-        return;
-      }
-      if (res.unauth) {
-        operatorKeyRef.current = "";
-        setUnlocked(false);
-        setPendingN(0);
-        try {
-          localStorage.removeItem(OPERATOR_KEY_STORAGE);
-        } catch (e) {}
-        return;
-      }
-      if (res.backend) {
-        operatorKeyRef.current = "";
-        setUnlocked(false);
-        setPendingN(0);
-        setOperatorBackendUnavailable(true);
-      }
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
   useEffect(() => {
     if (!unlocked) {
       setPendingN(0);
@@ -3863,7 +3878,6 @@ function App() {
       const list = res.ok ? res.requests || [] : [];
       setPendingN(list.filter(r => r.status === "pending").length);
       if (res.unauth) lock();
-      if (res.backend) setOperatorBackendUnavailable(true);
     });
     return () => {
       alive = false;
@@ -3967,9 +3981,7 @@ function App() {
     className: "refreshing"
   }, "refreshing status\u2026"), statusMeta.backendUnavailable && /*#__PURE__*/React.createElement("span", {
     className: "status-warn"
-  }, "status backend unavailable"), operatorBackendUnavailable && /*#__PURE__*/React.createElement("span", {
-    className: "status-warn"
-  }, "operator backend unavailable"), /*#__PURE__*/React.createElement("span", null, "updated ", displayDateTime(statusMeta.updatedAt))), /*#__PURE__*/React.createElement("form", {
+  }, "status backend unavailable"), /*#__PURE__*/React.createElement("span", null, "updated ", displayDateTime(statusMeta.updatedAt))), /*#__PURE__*/React.createElement("form", {
     className: "search",
     onSubmit: submitSearch
   }, /*#__PURE__*/React.createElement("span", {
