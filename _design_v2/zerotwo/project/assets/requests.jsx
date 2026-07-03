@@ -393,7 +393,7 @@ function OperatorRequests({ open, operatorKey, onClose, onCount }) {
                 <span className="rc-status">{r.status}</span>
                 <span className="rc-time">{relTime(r.ts)}</span>
               </div>
-              <div className="rc-row"><span className="k">username</span><span className="v">{r.username || " - "}</span></div>
+              <div className="rc-row"><span className="k">username</span><span className="v">{r.desiredUsername || " - "}</span></div>
               <div className="rc-row"><span className="k">contact</span><span className="v">{r.contact || " - "}</span></div>
               {r.referral && <div className="rc-row"><span className="k">referral</span><span className="v">{r.referral}</span></div>}
               {r.ip && r.ip !== "demo" && <div className="rc-row"><span className="k">ip</span><span className="v">{r.ip}</span></div>}
