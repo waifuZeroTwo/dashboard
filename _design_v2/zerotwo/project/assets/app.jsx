@@ -32,17 +32,8 @@ const SEED = [
 ];
 
 const CAT_ORDER = ["MEDIA", "STORAGE & CLOUD", "NETWORK & AUTOMATION"];
-const REMOVED_SERVICE_KEY = ["p", "lex"].join("");
-
-function isRemovedService(svc) {
-  const haystack = [svc && svc.id, svc && svc.name, svc && svc.url]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  return haystack.includes(REMOVED_SERVICE_KEY);
-}
 function visibleServices(list) {
-  return Array.isArray(list) ? list.filter((svc) => !isRemovedService(svc)) : [];
+  return Array.isArray(list) ? list.filter(Boolean) : [];
 }
 function load() {
   try {
@@ -213,7 +204,6 @@ function App() {
   }, [unlocked, inboxOpen]);
 
   const upsert = (svc) => {
-    if (isRemovedService(svc)) return;
     setSvcs((prev) => {
       const exists = prev.some((s) => s.id === svc.id);
       if (exists) return prev.map((s) => (s.id === svc.id ? svc : s));
