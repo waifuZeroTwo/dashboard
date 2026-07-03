@@ -37,8 +37,7 @@ npm run rebuild      # build + test
 
 - **Change the seed services / clusters:** edit `SEED` and `CAT_ORDER` in
   `src/app.jsx`, then `npm run build`.
-- **Change the operator passphrase:** run `passwd <new phrase>` in the dashboard
-  console to print a hash, paste it over `OPERATOR_KEY_SHA256` in `src/app.jsx`,
-  then `npm run build`. Set the **same** hash as `OPERATOR_KEY_SHA256` for the
-  backend (see `../backend`). The plaintext is never stored.
+- **Change the operator key:** update the backend operator-key configuration only,
+  then `npm run build` if frontend assets changed. Do not put an operator key,
+  admin token, or operator-key hash in frontend source or config.
 - **Restyle:** edit `src/terminal.css` and rebuild.

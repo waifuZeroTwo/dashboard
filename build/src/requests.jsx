@@ -148,14 +148,21 @@ const api = {
   },
   async list(key) {
     try {
-      const j = await requestJson("/api/requests", { headers: { Authorization: "Bearer " + (key || "") } });
-      return { ok: true, requests: j.requests || [] };
-    } catch (e) {
-      if (e instanceof ApiError) {
-        if (isAbsent(e.status)) return { ok: true, demo: true, requests: demoList() };
-        if (e.status === 401) return { ok: false, unauth: true };
+      const operatorKey = (key || "").trim();
+      const response = await fetch(`${API_BASE}/admin/requests`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${operatorKey}`
+        }
+      });
+      if (response.status === 200) {
+        const j = await readJsonSafe(response);
+        return { ok: true, requests: j.requests || [] };
       }
-      return { ok: true, demo: true, requests: demoList() };
+      if (response.status === 401) return { ok: false, unauth: true };
+      return { ok: false, backend: true, status: response.status };
+    } catch (e) {
+      return { ok: false, backend: true };
     }
   },
   async resolve(key, id, action) {

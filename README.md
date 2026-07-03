@@ -87,7 +87,7 @@ Use the optional backend when you want public visitors to submit account request
 1. Deploy `index.html` to your web root or static host.
 2. Deploy the Node backend from `backend/`.
 3. Put nginx, Caddy, Cloudflare Tunnel, or another reverse proxy in front of the backend.
-4. Set the operator hash in both the frontend build configuration and backend environment.
+4. Configure the operator key only on the backend; do not put an operator key or hash in frontend source or env/config.
 5. Configure CORS only if the frontend and backend are on different origins.
 
 Detailed backend instructions are available in [`backend/README.md`](backend/README.md). A complete split-hosting walkthrough is available in [`DEPLOY-siteground-truenas.md`](DEPLOY-siteground-truenas.md).
@@ -103,21 +103,21 @@ For real enforcement, use the backend. It provides:
 - Request body size limits.
 - Pending and total request caps to protect disk usage.
 - Atomic file writes.
-- Operator-only endpoints protected by the configured SHA-256 passphrase hash.
+- Operator-only endpoints protected by backend authentication.
 - CORS controls for split hosting.
 
-## Operator passphrase
+## Operator key
 
-The default operator passphrase is `zerotwo`. Change it before publishing the dashboard.
+Operator keys are validated by the backend only. The frontend sends the exact submitted key with only leading/trailing whitespace removed:
 
-1. Open the dashboard console and unlock it with the current passphrase.
-2. Run `passwd your new phrase`.
-3. Copy the printed SHA-256 hash.
-4. Replace `OPERATOR_KEY_SHA256` in `build/src/app.jsx` with the new hash.
-5. Run the build from the `build/` directory to regenerate `index.html`.
-6. Set the same hash as the backend `OPERATOR_KEY_SHA256` environment variable if you use the backend.
+```js
+fetch(`${API_BASE}/admin/requests`, {
+  method: "GET",
+  headers: { Authorization: `Bearer ${operatorKey.trim()}` }
+})
+```
 
-Only the hash should be stored. Do not publish or commit your real passphrase.
+Do not publish, commit, hash, or configure the operator key in frontend files. If the tab needs to keep the operator session open, the key is stored only in `sessionStorage` for that tab session.
 
 ## Hosting options
 

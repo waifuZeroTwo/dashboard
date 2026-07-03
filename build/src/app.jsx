@@ -4,8 +4,7 @@ const { useState, useEffect, useRef, useMemo, useCallback } = React;
 const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
-
-const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
+const OPERATOR_KEY_SESSION = "zerotwo.operatorKey.v1";
 
 const TITLE_CYCLE = [
     "HomeLab Nexus",
@@ -205,13 +204,13 @@ function App() {
   const [q, setQ] = useState("");
   const [now, setNow] = useState(new Date());
   const [termOpen, setTermOpen] = useState(false);
-  const [unlocked, setUnlocked] = useState(() => { try { return sessionStorage.getItem(UNLOCK_KEY) === "1"; } catch (e) { return false; } });
+  const [unlocked, setUnlocked] = useState(() => { try { return sessionStorage.getItem(UNLOCK_KEY) === "1" && !!sessionStorage.getItem(OPERATOR_KEY_SESSION); } catch (e) { return false; } });
   const [auth, setAuth] = useState(null);
   const [reqOpen, setReqOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [pendingN, setPendingN] = useState(0);
-  const operatorKeyRef = useRef("");
+  const operatorKeyRef = useRef((() => { try { return sessionStorage.getItem(OPERATOR_KEY_SESSION) || ""; } catch (e) { return ""; } })());
   const bootRef = useRef(new Date());
   const [newTab, setNewTab] = useState(() => {
     const v = localStorage.getItem(NEWTAB_KEY);
@@ -316,22 +315,32 @@ function App() {
     if (unlocked) { if (then) then(); }
     else setAuth({ reason, then: then || (() => {}) });
   };
-  const tryAuth = (pass) => {
-    if (window.sha256hex(pass) === OPERATOR_KEY_SHA256) {
+  const tryAuth = async (pass) => {
+    const operatorKey = pass.trim();
+    const res = await window.requestApi.list(operatorKey);
+    if (res.ok) {
       setUnlocked(true);
-      operatorKeyRef.current = pass;
-      try { sessionStorage.setItem(UNLOCK_KEY, "1"); } catch (e) {}
+      operatorKeyRef.current = operatorKey;
+      try {
+        sessionStorage.setItem(UNLOCK_KEY, "1");
+        sessionStorage.setItem(OPERATOR_KEY_SESSION, operatorKey);
+      } catch (e) {}
+      setPendingN((res.requests || []).filter((r) => r.status === "pending").length);
       const then = auth && auth.then;
       setAuth(null);
       if (then) setTimeout(then, 0);
-      return true;
+      return { ok: true };
     }
-    return false;
+    if (res.unauth) return { ok: false, error: "access denied · invalid operator key" };
+    return { ok: false, error: "backend unavailable" };
   };
   const lock = () => {
     setUnlocked(false);
     operatorKeyRef.current = "";
-    try { sessionStorage.removeItem(UNLOCK_KEY); } catch (e) {}
+    try {
+      sessionStorage.removeItem(UNLOCK_KEY);
+      sessionStorage.removeItem(OPERATOR_KEY_SESSION);
+    } catch (e) {}
     setTermOpen(false);
     setEditing(false);
     setInboxOpen(false);
@@ -342,8 +351,9 @@ function App() {
     let alive = true;
     window.requestApi.list(operatorKeyRef.current).then((res) => {
       if (!alive) return;
-      const list = res.requests || [];
+      const list = res.ok ? (res.requests || []) : [];
       setPendingN(list.filter((r) => r.status === "pending").length);
+      if (res.unauth) lock();
     });
     return () => { alive = false; };
   }, [unlocked, inboxOpen]);

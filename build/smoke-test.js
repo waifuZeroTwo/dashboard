@@ -50,11 +50,9 @@ setTimeout(() => {
   for (const [k, v] of Object.entries(checks)) { console.log((v ? "  PASS  " : "  FAIL  ") + k); if (!v) ok = false; }
   console.log("\n  tiles rendered: " + doc.querySelectorAll(".tile").length);
 
-  const want = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
-  const got = typeof dom.window.sha256hex === "function" ? dom.window.sha256hex("zerotwo") : "(no fn)";
-  const hashOk = got === want;
-  console.log("  sha256('zerotwo') matches baked key: " + hashOk + (hashOk ? "" : " (got " + got + ")"));
-  if (!hashOk) ok = false;
+  const hasFrontendOperatorHash = /OPERATOR_KEY_SHA256|61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea/.test(html);
+  console.log("  no frontend operator hash: " + !hasFrontendOperatorHash);
+  if (hasFrontendOperatorHash) ok = false;
 
   const realErrors = errors.filter((e) => !/no-net \(smoke test\)/.test(e));
   if (realErrors.length) { console.log("\nRUNTIME ERRORS:"); realErrors.forEach((e) => console.log("  " + e)); ok = false; }
