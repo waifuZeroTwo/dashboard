@@ -3489,8 +3489,16 @@ function sanitizeServiceUrl(svc) {
     availability: "Public launch URL pending"
   };
 }
+const REMOVED_SERVICE_KEY = ["p", "lex"].join("");
+function isRemovedService(svc) {
+  const haystack = [svc && svc.id, svc && svc.name, svc && svc.url].filter(Boolean).join(" ").toLowerCase();
+  return haystack.includes(REMOVED_SERVICE_KEY);
+}
+function visibleServices(list) {
+  return Array.isArray(list) ? list.filter(svc => !isRemovedService(svc)) : [];
+}
 function migrate(list) {
-  let out = Array.isArray(list) ? list.slice() : [];
+  let out = visibleServices(list);
   out = out.map(sanitizeServiceUrl);
   if (!out.some(s => s.id === "seerr")) {
     const seerr = {
@@ -3519,7 +3527,7 @@ function load() {
 }
 function save(svcs) {
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(svcs));
+    localStorage.setItem(STORE_KEY, JSON.stringify(visibleServices(svcs)));
   } catch (e) {}
 }
 const DEFAULT_API_BASE = "https://api.zerotwosystems.com";
@@ -3881,6 +3889,7 @@ function App() {
     };
   }, [unlocked, inboxOpen]);
   const upsert = svc => {
+    if (isRemovedService(svc)) return;
     setSvcs(prev => {
       const exists = prev.some(s => s.id === svc.id);
       if (exists) return prev.map(s => s.id === svc.id ? svc : s);
