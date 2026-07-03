@@ -1982,11 +1982,16 @@ function ServiceTile({
   }, "\u2715")));
 }
 const BLANK = {
+  id: "",
   name: "",
+  category: "OTHER",
   url: "",
-  category: "",
+  checkUrl: "",
+  statusMode: "auto",
   icon: "",
-  statusMode: "auto"
+  subtitle: "",
+  availability: "",
+  sortOrder: undefined
 };
 function EditModal({
   initial,
@@ -2021,10 +2026,16 @@ function EditModal({
     setSaving(true);
     const res = await onSave({
       ...f,
+      id: typeof f.id === "string" ? f.id.trim() : f.id,
       name: f.name.trim(),
-      url,
       category: (f.category || "OTHER").trim().toUpperCase(),
-      icon: typeof f.icon === "string" ? f.icon : ""
+      url,
+      checkUrl: typeof f.checkUrl === "string" ? f.checkUrl.trim() : "",
+      statusMode: typeof f.statusMode === "string" && f.statusMode.trim() ? f.statusMode.trim() : "auto",
+      icon: typeof f.icon === "string" ? f.icon : "",
+      subtitle: typeof f.subtitle === "string" ? f.subtitle : "",
+      availability: typeof f.availability === "string" ? f.availability : "",
+      sortOrder: f.sortOrder === "" ? undefined : f.sortOrder
     });
     if (!res || !res.ok) setSaving(false);
   };
@@ -3644,17 +3655,11 @@ function normalizeStatusService(entry) {
   if (!entry || typeof entry !== "object") return null;
   const id = String(entry.id || entry.slug || entry.name || "").trim();
   if (!id) return null;
-  const svc = {
+  return {
     id,
     status: normalizeStatus(entry.status),
     lastChecked: entry.lastChecked || entry.updatedAt || entry.checkedAt || null
   };
-  if (typeof entry.name === "string" && entry.name.trim()) svc.name = entry.name.trim();
-  if (typeof entry.category === "string" && entry.category.trim()) svc.category = entry.category.trim().toUpperCase();
-  if (typeof entry.url === "string" && entry.url.trim()) svc.url = entry.url.trim();
-  if (typeof entry.icon === "string") svc.icon = entry.icon;
-  if (typeof entry.statusMode === "string") svc.statusMode = entry.statusMode;
-  return svc;
 }
 function statusListFromPayload(payload) {
   const raw = Array.isArray(payload) ? payload : Array.isArray(payload && payload.services) ? payload.services : [];
@@ -3663,37 +3668,33 @@ function statusListFromPayload(payload) {
 function stableServiceFields(svc) {
   const idSource = svc && (svc.id || svc.name || svc.url || svc.category) || "unknown-service";
   const id = String(idSource).trim() || "unknown-service";
-  const name = String(svc && svc.name || id).trim() || id;
-  const category = String(svc && svc.category || "OTHER").trim().toUpperCase() || "OTHER";
-  const url = typeof (svc && svc.url) === "string" ? svc.url : "";
-  return {
-    ...svc,
+  const stable = {
     id,
-    name,
-    category,
-    url
+    name: String(svc && svc.name || id).trim() || id,
+    category: String(svc && svc.category || "OTHER").trim().toUpperCase() || "OTHER",
+    url: typeof (svc && svc.url) === "string" ? svc.url.trim() : "",
+    checkUrl: typeof (svc && svc.checkUrl) === "string" ? svc.checkUrl.trim() : "",
+    statusMode: typeof (svc && svc.statusMode) === "string" && svc.statusMode.trim() ? svc.statusMode.trim() : "auto",
+    icon: typeof (svc && svc.icon) === "string" ? svc.icon : "",
+    subtitle: typeof (svc && svc.subtitle) === "string" ? svc.subtitle : "",
+    availability: typeof (svc && svc.availability) === "string" ? svc.availability : "",
+    sortOrder: svc && svc.sortOrder
   };
+  Object.keys(stable).forEach(key => stable[key] === undefined && delete stable[key]);
+  return stable;
 }
 function mergeStatusServices(existing, backendServices) {
   const byId = new Map(existing.map(s => [s.id, stableServiceFields(s)]));
-  const order = existing.map(s => s.id);
   backendServices.forEach(svc => {
     const prev = byId.get(svc.id);
-    if (!prev) order.push(svc.id);
-    byId.set(svc.id, stableServiceFields({
-      ...(prev || {
-        id: svc.id,
-        name: svc.name || svc.id,
-        category: svc.category || "OTHER",
-        statusMode: "auto",
-        icon: "",
-        url: ""
-      }),
-      status: svc.status || prev && prev.status || "unknown",
-      lastChecked: svc.lastChecked || prev && prev.lastChecked || null
-    }));
+    if (!prev) return;
+    byId.set(svc.id, {
+      ...stableServiceFields(prev),
+      status: svc.status || prev.status || "unknown",
+      lastChecked: svc.lastChecked || prev.lastChecked || null
+    });
   });
-  return order.map(id => byId.get(id)).filter(Boolean);
+  return existing.map(s => byId.get(s.id)).filter(Boolean);
 }
 function displayDateTime(value) {
   if (!value) return "never";
@@ -4022,11 +4023,14 @@ function App() {
     if (isRemovedService(svc)) return {
       ok: false
     };
-    const nextSvc = {
+    const id = svc.id || "svc_" + Date.now().toString(36);
+    const existing = svcsRef.current.find(s => s.id === id);
+    const nextSvc = stableServiceFields({
+      ...(existing || BLANK),
       ...svc,
-      id: svc.id || "svc_" + Date.now().toString(36)
-    };
-    const exists = svcsRef.current.some(s => s.id === nextSvc.id);
+      id
+    });
+    const exists = !!existing;
     const nextServices = exists ? svcsRef.current.map(s => s.id === nextSvc.id ? nextSvc : s) : [...svcsRef.current, nextSvc];
     const ok = await commitServices(nextServices);
     if (ok) setModal(null);
@@ -4198,12 +4202,7 @@ function App() {
       className: "tile add",
       onClick: () => setModal({
         svc: {
-          ...{
-            name: "",
-            url: "",
-            icon: "",
-            statusMode: "auto"
-          },
+          ...BLANK,
           category: cat
         }
       })
