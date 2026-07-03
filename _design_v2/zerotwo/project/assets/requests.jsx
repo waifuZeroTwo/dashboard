@@ -79,11 +79,16 @@ const api = {
       const r = await fetch("/admin/requests", { headers: { Authorization: "Bearer " + (key || "") } });
       if (isAbsent(r.status)) return { ok: true, demo: true, requests: normalizeRequests(demoList()) };
       if (r.status === 401) return { ok: false, unauth: true };
-      if (!r.ok) return { ok: false };
+      if (!r.ok) {
+        const body = await r.text().catch(() => "");
+        console.error("request list failed", { status: r.status, body });
+        return { ok: false, status: r.status, body };
+      }
       const j = await r.json();
       return { ok: true, requests: normalizeRequests(j.requests) };
     } catch (e) {
-      return { ok: true, demo: true, requests: normalizeRequests(demoList()) };
+      console.error("request list fetch failed", e);
+      return { ok: false, status: 0, body: e && e.message ? e.message : "" };
     }
   },
   async resolve(key, id, action) {
@@ -100,7 +105,7 @@ const api = {
       }
       return { ok: true };
     } catch (e) {
-      console.error("request action failed", { action, id, status: 0, body: e && e.message ? e.message : "" });
+      console.error("request action fetch failed", e);
       return { ok: false, status: 0, body: e && e.message ? e.message : "" };
     }
   },
