@@ -3523,7 +3523,7 @@ function load() {
       if (Array.isArray(d) && d.length) return migrate(d);
     }
   } catch (e) {}
-  return SEED;
+  return migrate(SEED);
 }
 function save(svcs) {
   try {
@@ -3560,6 +3560,35 @@ async function getJson(path, timeout = STATUS_TIMEOUT_MS) {
     clearTimeout(t);
   }
 }
+async function getServices(timeout = STATUS_TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const response = await fetch(apiUrl("/services"), {
+      cache: "no-store",
+      signal: ctrl.signal
+    });
+    const bodyText = await response.text();
+    let payload = null;
+    if (bodyText) {
+      try {
+        payload = JSON.parse(bodyText);
+      } catch (e) {
+        if (response.ok) throw e;
+      }
+    }
+    if (!response.ok) {
+      const err = new Error("services api returned " + response.status);
+      err.status = response.status;
+      err.body = bodyText;
+      throw err;
+    }
+    const raw = Array.isArray(payload) ? payload : Array.isArray(payload && payload.services) ? payload.services : [];
+    return migrate(raw.map(normalizeService).filter(Boolean));
+  } finally {
+    clearTimeout(t);
+  }
+}
 function ping(url, timeout = 5000) {
   return new Promise(resolve => {
     const ctrl = new AbortController();
@@ -3579,6 +3608,26 @@ function ping(url, timeout = 5000) {
       resolve("offline");
     });
   });
+}
+
+function normalizeService(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const id = String(entry.id || entry.slug || entry.name || "").trim();
+  if (!id) return null;
+  const svc = {
+    id,
+    name: String(entry.name || id).trim() || id,
+    category: String(entry.category || "OTHER").trim().toUpperCase() || "OTHER",
+    url: typeof entry.url === "string" ? entry.url.trim() : "",
+    checkUrl: typeof entry.checkUrl === "string" ? entry.checkUrl.trim() : "",
+    statusMode: typeof entry.statusMode === "string" && entry.statusMode.trim() ? entry.statusMode.trim() : "auto",
+    icon: typeof entry.icon === "string" ? entry.icon : "",
+    subtitle: typeof entry.subtitle === "string" ? entry.subtitle : "",
+    availability: typeof entry.availability === "string" ? entry.availability : "",
+    sortOrder: entry.sortOrder
+  };
+  Object.keys(svc).forEach(key => svc[key] === undefined && delete svc[key]);
+  return svc;
 }
 function normalizeStatus(status) {
   const st = String(status || "").trim().toLowerCase();
@@ -3630,13 +3679,12 @@ function mergeStatusServices(existing, backendServices) {
     byId.set(svc.id, stableServiceFields({
       ...(prev || {
         id: svc.id,
-        name: svc.id,
-        category: "OTHER",
+        name: svc.name || svc.id,
+        category: svc.category || "OTHER",
         statusMode: "auto",
         icon: "",
         url: ""
       }),
-      ...svc,
       status: svc.status || prev && prev.status || "unknown",
       lastChecked: svc.lastChecked || prev && prev.lastChecked || null
     }));
@@ -3678,7 +3726,7 @@ function fmtDate(d) {
   }).toUpperCase();
 }
 function App() {
-  const [svcs, setSvcs] = useState(load);
+  const [svcs, setSvcs] = useState(() => migrate(SEED));
   const [editing, setEditing] = useState(false);
   const [modal, setModal] = useState(null);
   const [statuses, setStatuses] = useState({});
@@ -3716,10 +3764,30 @@ function App() {
   });
   const searchRef = useRef(null);
   const svcsRef = useRef(svcs);
+  const servicesLoadedRef = useRef(false);
   useEffect(() => {
     svcsRef.current = svcs;
   }, [svcs]);
-  useEffect(() => save(svcs), [svcs]);
+  useEffect(() => {
+    if (servicesLoadedRef.current) save(svcs);
+  }, [svcs]);
+  useEffect(() => {
+    let alive = true;
+    getServices().then(backendServices => {
+      if (!alive) return;
+      servicesLoadedRef.current = true;
+      setSvcs(backendServices);
+      save(backendServices);
+    }).catch(err => {
+      if (!alive) return;
+      if (err && err.status) console.error("[services] backend load failed", err.status, err.body || "");else console.error("[services] backend load failed", err);
+      servicesLoadedRef.current = true;
+      setSvcs(load());
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   useEffect(() => localStorage.setItem(NEWTAB_KEY, newTab ? "1" : "0"), [newTab]);
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
