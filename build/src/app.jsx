@@ -80,8 +80,36 @@ function load() {
   } catch (e) {}
   return SEED;
 }
-function save(svcs) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(svcs)); } catch (e) {}
+function cacheServices(svcs) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(migrate(svcs))); } catch (e) {}
+}
+
+async function loadServicesFromBackend() {
+  const response = await fetch(apiUrl("/services"), { cache: "no-store" });
+  if (!response.ok) throw new Error("services api returned " + response.status);
+  const payload = await response.json();
+  if (payload && payload.ok === true && Array.isArray(payload.services)) return migrate(payload.services);
+  throw new Error("services api returned an invalid payload");
+}
+
+async function putServicesToBackend(svcs, operatorKey) {
+  const response = await fetch(apiUrl("/admin/services"), {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${operatorKey || ""}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ services: migrate(svcs) }),
+  });
+  const body = await response.text();
+  let payload = null;
+  try { payload = body ? JSON.parse(body) : null; } catch (e) {}
+  if (!response.ok || !(payload && payload.ok === true)) {
+    console.error("[services] save failed", response.status, body);
+    return null;
+  }
+  if (Array.isArray(payload.services)) return migrate(payload.services);
+  return await loadServicesFromBackend();
 }
 
 const DEFAULT_API_BASE = "https://api.zerotwosystems.com";
@@ -220,7 +248,19 @@ function App() {
   const svcsRef = useRef(svcs);
 
   useEffect(() => { svcsRef.current = svcs; }, [svcs]);
-  useEffect(() => save(svcs), [svcs]);
+  useEffect(() => {
+    let alive = true;
+    loadServicesFromBackend()
+      .then((services) => {
+        if (!alive) return;
+        setSvcs(services);
+        cacheServices(services);
+      })
+      .catch(() => {
+        if (alive) cacheServices(svcsRef.current);
+      });
+    return () => { alive = false; };
+  }, []);
   useEffect(() => localStorage.setItem(NEWTAB_KEY, newTab ? "1" : "0"), [newTab]);
 
   useEffect(() => {
@@ -358,17 +398,25 @@ function App() {
     return () => { alive = false; };
   }, [unlocked, inboxOpen]);
 
-  const upsert = (svc) => {
-    setSvcs((prev) => {
-      const exists = prev.some((s) => s.id === svc.id);
-      if (exists) return prev.map((s) => (s.id === svc.id ? svc : s));
-      return [...prev, { ...svc, id: svc.id || ("svc_" + Date.now().toString(36)) }];
-    });
-    setModal(null);
+  const saveServiceList = async (next, onSuccess) => {
+    const saved = await putServicesToBackend(next, operatorKeyRef.current);
+    if (!saved) return false;
+    setSvcs(saved);
+    cacheServices(saved);
+    if (onSuccess) onSuccess();
+    return true;
   };
-  const del = (id) => { if (confirm("Delete this node?")) setSvcs((prev) => prev.filter((s) => s.id !== id)); };
-  const setIcon = (id, icon) => setSvcs((prev) => prev.map((s) => (s.id === id ? { ...s, icon } : s)));
-  const resetAll = () => { if (confirm("Reset dashboard to default services? Your custom tiles and logos will be lost.")) { setSvcs(SEED); save(SEED); } };
+  const upsert = (svc) => {
+    const next = (() => {
+      const withId = { ...svc, id: svc.id || ("svc_" + Date.now().toString(36)) };
+      const exists = svcsRef.current.some((s) => s.id === withId.id);
+      return exists ? svcsRef.current.map((s) => (s.id === withId.id ? withId : s)) : [...svcsRef.current, withId];
+    })();
+    saveServiceList(next, () => setModal(null));
+  };
+  const del = (id) => { if (confirm("Delete this node?")) saveServiceList(svcsRef.current.filter((s) => s.id !== id)); };
+  const setIcon = (id, icon) => saveServiceList(svcsRef.current.map((s) => (s.id === id ? { ...s, icon } : s)));
+  const resetAll = () => { if (confirm("Reset dashboard to default services? Your custom tiles and logos will be lost.")) saveServiceList(SEED); };
 
   const submitSearch = (e) => {
     e.preventDefault();
