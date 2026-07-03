@@ -76,7 +76,7 @@ const api = {
   },
   async list(key) {
     try {
-      const r = await fetch("/api/requests", { headers: { Authorization: "Bearer " + (key || "") } });
+      const r = await fetch("/admin/requests", { headers: { Authorization: "Bearer " + (key || "") } });
       if (isAbsent(r.status)) return { ok: true, demo: true, requests: demoList() };
       if (r.status === 401) return { ok: false, unauth: true };
       if (!r.ok) return { ok: false };
