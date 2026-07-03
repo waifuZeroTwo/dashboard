@@ -126,7 +126,7 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
           ["rm <name>", "delete a service"],
           ["neofetch", "system summary"],
           ["requests", "open the operator request inbox"],
-          ["passwd <phrase>", "generate a new operator-key hash"],
+          ["passwd", "operator keys are managed by the backend"],
           ["lock", "end operator session"],
           ["whoami / date", "session info"],
           ["history", "command history"],
@@ -230,12 +230,8 @@ function Terminal({ open, onClose, services, statusOf, onLaunch, onPing, onAdd, 
         break;
 
       case "passwd": {
-        if (!arg) { line("usage: passwd <new passphrase>", "l-err"); break; }
-        const h = window.sha256hex(arg);
-        line("new operator-key hash generated:", "l-sys");
-        line(h, "l-ok");
-        line("paste it into assets/app.jsx, replacing the value of", "l-dim");
-        line("OPERATOR_KEY_SHA256, then re-deploy. plaintext is never stored.", "l-dim");
+        line("operator keys are verified by the backend only.", "l-sys");
+        line("No operator key or hash is stored in frontend source.", "l-dim");
         break;
       }
 

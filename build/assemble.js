@@ -82,4 +82,4 @@ console.log("  <div id=\"root\">      : " + html.includes('<div id="root">'));
 console.log("  ReactDOM.createRoot   : " + html.includes("ReactDOM.createRoot") );
 console.log("  no unpkg/CDN js       : " + !/unpkg\.com|babel/i.test(html.replace(/JetBrains|Noto/g,"")));
 console.log("  no text/babel script  : " + !/text\/babel/.test(html));
-console.log("  OPERATOR_KEY present  : " + html.includes("OPERATOR_KEY_SHA256"));
+console.log("  admin requests route  : " + html.includes("/admin/requests"));

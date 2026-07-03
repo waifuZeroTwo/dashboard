@@ -2116,17 +2116,20 @@ function AuthModal({
   onClose
 }) {
   const [pass, setPass] = useState("");
-  const [err, setErr] = useState(false);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
     const t = setTimeout(() => ref.current && ref.current.focus(), 60);
     return () => clearTimeout(t);
   }, []);
-  const submit = () => {
-    if (!pass) return;
-    const ok = onSubmit(pass);
-    if (!ok) {
-      setErr(true);
+  const submit = async () => {
+    if (!pass || busy) return;
+    setBusy(true);
+    const res = await onSubmit(pass);
+    setBusy(false);
+    if (!res || !res.ok) {
+      setErr(res && res.error || "access denied · invalid operator key");
       setPass("");
       ref.current && ref.current.focus();
     }
@@ -2156,7 +2159,7 @@ function AuthModal({
     value: pass,
     onChange: e => {
       setPass(e.target.value);
-      setErr(false);
+      setErr("");
     },
     onKeyDown: e => {
       if (e.key === "Enter") submit();
@@ -2165,7 +2168,7 @@ function AuthModal({
     autoComplete: "off"
   })), err ? /*#__PURE__*/React.createElement("div", {
     className: "auth-err"
-  }, "\u2715 access denied \xB7 invalid operator key") : /*#__PURE__*/React.createElement("div", {
+  }, "\u2715 ", err) : /*#__PURE__*/React.createElement("div", {
     className: "auth-hint"
   }, "public access (links \xB7 search \xB7 status) needs no key.")), /*#__PURE__*/React.createElement("div", {
     className: "m-foot"
@@ -2175,10 +2178,11 @@ function AuthModal({
   }, "cancel"), /*#__PURE__*/React.createElement("button", {
     className: "btn on",
     onClick: submit,
+    disabled: busy,
     style: {
-      opacity: pass ? 1 : 0.4
+      opacity: pass && !busy ? 1 : 0.4
     }
-  }, "authenticate"))));
+  }, busy ? "checking…" : "authenticate"))));
 }
 const HOW_STEPS = [{
   n: "01",
@@ -2485,31 +2489,33 @@ const api = {
   },
   async list(key) {
     try {
-      const j = await requestJson("/api/requests", {
+      const operatorKey = (key || "").trim();
+      const response = await fetch(`${API_BASE}/admin/requests`, {
+        method: "GET",
         headers: {
-          Authorization: "Bearer " + (key || "")
+          Authorization: `Bearer ${operatorKey}`
         }
       });
-      return {
-        ok: true,
-        requests: j.requests || []
-      };
-    } catch (e) {
-      if (e instanceof ApiError) {
-        if (isAbsent(e.status)) return {
+      if (response.status === 200) {
+        const j = await readJsonSafe(response);
+        return {
           ok: true,
-          demo: true,
-          requests: demoList()
-        };
-        if (e.status === 401) return {
-          ok: false,
-          unauth: true
+          requests: j.requests || []
         };
       }
+      if (response.status === 401) return {
+        ok: false,
+        unauth: true
+      };
       return {
-        ok: true,
-        demo: true,
-        requests: demoList()
+        ok: false,
+        backend: true,
+        status: response.status
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        backend: true
       };
     }
   },
@@ -3042,7 +3048,7 @@ function Terminal({
     switch (cmd) {
       case "help":
         line("available commands", "l-sys");
-        [["ls / services", "list all services + live status"], ["open <#|name>", "launch a service (also: go, launch)"], ["status [name]", "re-scan and show node status"], ["search <query>", "search the web via Google"], ["add", "open the new-service dialog"], ["edit <name>", "edit a service"], ["rm <name>", "delete a service"], ["neofetch", "system summary"], ["requests", "open the operator request inbox"], ["passwd <phrase>", "generate a new operator-key hash"], ["lock", "end operator session"], ["whoami / date", "session info"], ["history", "command history"], ["clear", "clear the console"], ["exit", "close the console (or press ` )"]].forEach(([c, d]) => line(/*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+        [["ls / services", "list all services + live status"], ["open <#|name>", "launch a service (also: go, launch)"], ["status [name]", "re-scan and show node status"], ["search <query>", "search the web via Google"], ["add", "open the new-service dialog"], ["edit <name>", "edit a service"], ["rm <name>", "delete a service"], ["neofetch", "system summary"], ["requests", "open the operator request inbox"], ["passwd", "operator keys are managed by the backend"], ["lock", "end operator session"], ["whoami / date", "session info"], ["history", "command history"], ["clear", "clear the console"], ["exit", "close the console (or press ` )"]].forEach(([c, d]) => line(/*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
           className: "l-ok"
         }, tpad(c, 18)), /*#__PURE__*/React.createElement("span", {
           className: "l-dim"
@@ -3183,15 +3189,8 @@ function Terminal({
         break;
       case "passwd":
         {
-          if (!arg) {
-            line("usage: passwd <new passphrase>", "l-err");
-            break;
-          }
-          const h = window.sha256hex(arg);
-          line("new operator-key hash generated:", "l-sys");
-          line(h, "l-ok");
-          line("paste it into assets/app.jsx, replacing the value of", "l-dim");
-          line("OPERATOR_KEY_SHA256, then re-deploy. plaintext is never stored.", "l-dim");
+          line("operator keys are verified by the backend only.", "l-sys");
+          line("No operator key or hash is stored in frontend source.", "l-dim");
           break;
         }
       case "lock":
@@ -3340,7 +3339,7 @@ const {
 const STORE_KEY = "zerotwo.nexus.v1";
 const NEWTAB_KEY = "zerotwo.newtab.v1";
 const UNLOCK_KEY = "zerotwo.unlocked.v1";
-const OPERATOR_KEY_SHA256 = "61d8dc87458a24eae39d74abb171656a42efcb999fdc38633770c1734b9295ea";
+const OPERATOR_KEY_SESSION = "zerotwo.operatorKey.v1";
 const TITLE_CYCLE = ["HomeLab Nexus", "होमलैब नेक्सस", "ホームラボ・ネクサス", "家庭实验室枢纽", "محور المختبر المنزلي", "Узел домашней лаборатории", "홈랩 넥서스", "ศูนย์กลางโฮมแล็บ", "Kitovu cha Maabara ya Nyumbani", "Kotilaboratorion Solmukohta"];
 const SEERR_URL = "https://seerr.zerotwosystems.com/";
 const JELLYFIN_URL = "https://fin.zerotwosystems.com/";
@@ -3626,7 +3625,7 @@ function App() {
   const [termOpen, setTermOpen] = useState(false);
   const [unlocked, setUnlocked] = useState(() => {
     try {
-      return sessionStorage.getItem(UNLOCK_KEY) === "1";
+      return sessionStorage.getItem(UNLOCK_KEY) === "1" && !!sessionStorage.getItem(OPERATOR_KEY_SESSION);
     } catch (e) {
       return false;
     }
@@ -3636,7 +3635,13 @@ function App() {
   const [howOpen, setHowOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [pendingN, setPendingN] = useState(0);
-  const operatorKeyRef = useRef("");
+  const operatorKeyRef = useRef((() => {
+    try {
+      return sessionStorage.getItem(OPERATOR_KEY_SESSION) || "";
+    } catch (e) {
+      return "";
+    }
+  })());
   const bootRef = useRef(new Date());
   const [newTab, setNewTab] = useState(() => {
     const v = localStorage.getItem(NEWTAB_KEY);
@@ -3762,25 +3767,39 @@ function App() {
       then: then || (() => {})
     });
   };
-  const tryAuth = pass => {
-    if (window.sha256hex(pass) === OPERATOR_KEY_SHA256) {
+  const tryAuth = async pass => {
+    const operatorKey = pass.trim();
+    const res = await window.requestApi.list(operatorKey);
+    if (res.ok) {
       setUnlocked(true);
-      operatorKeyRef.current = pass;
+      operatorKeyRef.current = operatorKey;
       try {
         sessionStorage.setItem(UNLOCK_KEY, "1");
+        sessionStorage.setItem(OPERATOR_KEY_SESSION, operatorKey);
       } catch (e) {}
+      setPendingN((res.requests || []).filter(r => r.status === "pending").length);
       const then = auth && auth.then;
       setAuth(null);
       if (then) setTimeout(then, 0);
-      return true;
+      return {
+        ok: true
+      };
     }
-    return false;
+    if (res.unauth) return {
+      ok: false,
+      error: "access denied · invalid operator key"
+    };
+    return {
+      ok: false,
+      error: "backend unavailable"
+    };
   };
   const lock = () => {
     setUnlocked(false);
     operatorKeyRef.current = "";
     try {
       sessionStorage.removeItem(UNLOCK_KEY);
+      sessionStorage.removeItem(OPERATOR_KEY_SESSION);
     } catch (e) {}
     setTermOpen(false);
     setEditing(false);
@@ -3794,8 +3813,9 @@ function App() {
     let alive = true;
     window.requestApi.list(operatorKeyRef.current).then(res => {
       if (!alive) return;
-      const list = res.requests || [];
+      const list = res.ok ? res.requests || [] : [];
       setPendingN(list.filter(r => r.status === "pending").length);
+      if (res.unauth) lock();
     });
     return () => {
       alive = false;

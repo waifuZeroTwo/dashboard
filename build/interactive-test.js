@@ -11,7 +11,21 @@ vc.on("jsdomError", (e) => errors.push(String((e && (e.detail && e.detail.stack)
 const dom = new JSDOM(html, {
   runScripts: "dangerously", pretendToBeVisual: true, url: "https://zerotwosystems.com/",
   virtualConsole: vc,
-  beforeParse(w) { w.fetch = () => Promise.reject(new Error("no-net")); },
+  beforeParse(w) {
+    w.__adminRequests = [];
+    w.fetch = (url, init = {}) => {
+      const href = String(url);
+      if (href === "https://api.zerotwosystems.com/admin/requests") {
+        w.__adminRequests.push({ url: href, init });
+        const auth = init.headers && init.headers.Authorization;
+        if (auth === "Bearer zerotwo") {
+          return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ requests: [{ id: "r1", status: "pending", ts: Date.now() }] })) });
+        }
+        return Promise.resolve({ ok: false, status: 401, text: () => Promise.resolve(JSON.stringify({ error: "unauthorized" })) });
+      }
+      return Promise.reject(new Error("no-net"));
+    };
+  },
 });
 const win = dom.window, doc = win.document;
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -42,6 +56,7 @@ const check = (name, cond) => { results.push([name, !!cond]); };
   click([...doc.querySelectorAll(".modal.auth .m-foot .btn")].find((b) => /authenticate/i.test(b.textContent)));
   await delay(200);
   check("wrong key rejected (access denied)", /access denied/i.test(doc.body.textContent) && !doc.querySelector(".lock.open"));
+  check("wrong key called admin requests", win.__adminRequests.some((r) => r.url.endsWith("/admin/requests") && r.init.method === "GET" && r.init.headers.Authorization === "Bearer wrongkey"));
 
   pw = doc.querySelector(".modal.auth input[type=password]");
   setValue(pw, "zerotwo");
@@ -51,6 +66,7 @@ const check = (name, cond) => { results.push([name, !!cond]); };
   check("auth modal dismissed after unlock", !doc.querySelector(".modal.auth"));
   check("terminal drawer opened (.term.open)", !!doc.querySelector(".term.open"));
   check("INBOX button appears for operator", [...doc.querySelectorAll(".topbar .btn")].some((b) => /inbox/i.test(b.textContent)));
+  check("correct key sent raw to admin requests", win.__adminRequests.some((r) => r.url.endsWith("/admin/requests") && r.init.method === "GET" && r.init.headers.Authorization === "Bearer zerotwo"));
 
   const ti = doc.querySelector(".term-input");
   setValue(ti, "help"); enter(ti);
@@ -64,8 +80,7 @@ const check = (name, cond) => { results.push([name, !!cond]); };
 
   setValue(ti, "passwd hunter2"); enter(ti);
   await delay(150);
-  const want = win.sha256hex("hunter2");
-  check("console `passwd` prints correct sha256 hash", doc.querySelector(".term-body").textContent.includes(want));
+  check("console `passwd` does not hash operator keys", /backend only/i.test(doc.querySelector(".term-body").textContent));
 
   click([...doc.querySelectorAll(".topbar .btn")].find((b) => /request access/i.test(b.textContent)));
   await delay(200);

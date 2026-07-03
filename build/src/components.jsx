@@ -273,14 +273,21 @@ function EditModal({ initial, categories, onSave, onClose }) {
 
 function AuthModal({ reason, onSubmit, onClose }) {
   const [pass, setPass] = useState("");
-  const [err, setErr] = useState(false);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
   const ref = useRef(null);
   useEffect(() => { const t = setTimeout(() => ref.current && ref.current.focus(), 60); return () => clearTimeout(t); }, []);
 
-  const submit = () => {
-    if (!pass) return;
-    const ok = onSubmit(pass);
-    if (!ok) { setErr(true); setPass(""); ref.current && ref.current.focus(); }
+  const submit = async () => {
+    if (!pass || busy) return;
+    setBusy(true);
+    const res = await onSubmit(pass);
+    setBusy(false);
+    if (!res || !res.ok) {
+      setErr((res && res.error) || "access denied · invalid operator key");
+      setPass("");
+      ref.current && ref.current.focus();
+    }
   };
 
   return (
@@ -301,19 +308,19 @@ function AuthModal({ reason, onSubmit, onClose }) {
               ref={ref}
               type="password"
               value={pass}
-              onChange={(e) => { setPass(e.target.value); setErr(false); }}
+              onChange={(e) => { setPass(e.target.value); setErr(""); }}
               onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
               placeholder="••••••••••"
               autoComplete="off"
             />
           </div>
           {err
-            ? <div className="auth-err">✕ access denied · invalid operator key</div>
+            ? <div className="auth-err">✕ {err}</div>
             : <div className="auth-hint">public access (links · search · status) needs no key.</div>}
         </div>
         <div className="m-foot">
           <button className="btn" onClick={onClose}>cancel</button>
-          <button className="btn on" onClick={submit} style={{ opacity: pass ? 1 : 0.4 }}>authenticate</button>
+          <button className="btn on" onClick={submit} disabled={busy} style={{ opacity: pass && !busy ? 1 : 0.4 }}>{busy ? "checking…" : "authenticate"}</button>
         </div>
       </div>
     </div>
