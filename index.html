@@ -1999,6 +1999,7 @@ function EditModal({
     ...BLANK,
     ...initial
   } : BLANK);
+  const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
   const set = (k, v) => setF(p => ({
     ...p,
@@ -2013,16 +2014,18 @@ function EditModal({
     if (u) set("icon", u.trim());
   };
   const valid = f.name.trim();
-  const save = () => {
-    if (!valid) return;
+  const save = async () => {
+    if (!valid || saving) return;
     let url = f.url.trim();
     if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
-    onSave({
+    setSaving(true);
+    const res = await onSave({
       ...f,
       name: f.name.trim(),
       url,
       category: (f.category || "OTHER").trim().toUpperCase()
     });
+    if (!res || !res.ok) setSaving(false);
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "modal-back",
@@ -2104,11 +2107,11 @@ function EditModal({
   }, "cancel"), /*#__PURE__*/React.createElement("button", {
     className: "btn on",
     onClick: save,
-    disabled: !valid,
+    disabled: !valid || saving,
     style: {
-      opacity: valid ? 1 : 0.4
+      opacity: valid && !saving ? 1 : 0.4
     }
-  }, isEdit ? "save" : "create"))));
+  }, saving ? "saving..." : isEdit ? "save" : "create"))));
 }
 function AuthModal({
   reason,
@@ -4015,14 +4018,20 @@ function App() {
     return true;
   };
   const upsert = async svc => {
-    if (isRemovedService(svc)) return;
+    if (isRemovedService(svc)) return {
+      ok: false
+    };
     const nextSvc = {
       ...svc,
       id: svc.id || "svc_" + Date.now().toString(36)
     };
     const exists = svcsRef.current.some(s => s.id === nextSvc.id);
     const nextServices = exists ? svcsRef.current.map(s => s.id === nextSvc.id ? nextSvc : s) : [...svcsRef.current, nextSvc];
-    if (await commitServices(nextServices)) setModal(null);
+    const ok = await commitServices(nextServices);
+    if (ok) setModal(null);
+    return {
+      ok
+    };
   };
   const del = async id => {
     if (!confirm("Delete this node?")) return;
