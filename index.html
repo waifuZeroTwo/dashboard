@@ -444,6 +444,7 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .field input:focus, .field select:focus { border-color: var(--line-2); box-shadow: var(--glow-soft); }
+.field .help { color: var(--muted); font-size: 11px; line-height: 1.4; margin-top: 6px; }
 .field .row { display: flex; gap: 12px; }
 .field .row > * { flex: 1; }
 
@@ -2004,6 +2005,7 @@ function EditModal({
     ...BLANK,
     ...initial
   } : BLANK);
+  const [checkUrlTouched, setCheckUrlTouched] = useState(isEdit && !!f.checkUrl);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const fileRef = useRef(null);
@@ -2025,6 +2027,8 @@ function EditModal({
     setErr("");
     let url = f.url.trim();
     if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
+    let checkUrl = typeof f.checkUrl === "string" ? f.checkUrl.trim() : "";
+    if (!isEdit && !checkUrl) checkUrl = url;
     setSaving(true);
     const res = await onSave({
       ...f,
@@ -2032,7 +2036,7 @@ function EditModal({
       name: f.name.trim(),
       category: (f.category || "OTHER").trim().toUpperCase(),
       url,
-      checkUrl: typeof f.checkUrl === "string" ? f.checkUrl.trim() : "",
+      checkUrl,
       statusMode: typeof f.statusMode === "string" && f.statusMode.trim() ? f.statusMode.trim() : "auto",
       icon: typeof f.icon === "string" ? f.icon : "",
       subtitle: typeof f.subtitle === "string" ? f.subtitle : "",
@@ -2092,11 +2096,32 @@ function EditModal({
     autoFocus: true
   })), /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "url"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Launch URL"), /*#__PURE__*/React.createElement("input", {
     value: f.url,
-    onChange: e => set("url", e.target.value),
+    onChange: e => {
+      const value = e.target.value;
+      setF(p => ({
+        ...p,
+        url: value,
+        checkUrl: !isEdit && !checkUrlTouched ? value : p.checkUrl
+      }));
+    },
     placeholder: "https://fin.zerotwosystems.com/"
-  })), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "help"
+  }, "Opened when the service card is clicked.")), /*#__PURE__*/React.createElement("div", {
+    className: "field"
+  }, /*#__PURE__*/React.createElement("label", null, "Health-check URL"), /*#__PURE__*/React.createElement("input", {
+    value: f.checkUrl,
+    onChange: e => {
+      setCheckUrlTouched(true);
+      set("checkUrl", e.target.value);
+    },
+    placeholder: "https://fin.zerotwosystems.com/health"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "help"
+  }, "Requested by the backend to determine service status.")
+  ), /*#__PURE__*/React.createElement("div", {
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "category"), /*#__PURE__*/React.createElement("input", {
     value: f.category,
