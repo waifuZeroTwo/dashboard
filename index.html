@@ -2030,6 +2030,9 @@ const BLANK = {
   availability: "",
   sortOrder: undefined
 };
+function sanitizeServiceId(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+}
 function EditModal({
   initial,
   originalId,
@@ -2058,10 +2061,12 @@ function EditModal({
     const u = prompt("Paste a logo image URL:");
     if (u) set("icon", u.trim());
   };
-  const valid = f.name.trim();
+  const serviceId = sanitizeServiceId(f.id);
+  const valid = f.name.trim() && serviceId;
   const save = async () => {
     if (!valid || saving) return;
     setErr("");
+    const id = sanitizeServiceId(f.id);
     let url = f.url.trim();
     if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
     let checkUrl = typeof f.checkUrl === "string" ? f.checkUrl.trim() : "";
@@ -2070,7 +2075,7 @@ function EditModal({
     const res = await onSave({
       ...f,
       originalId,
-      id: typeof f.id === "string" ? f.id.trim() : f.id,
+      id,
       name: f.name.trim(),
       category: (f.category || "OTHER").trim().toUpperCase(),
       url,
@@ -2128,11 +2133,19 @@ function EditModal({
     onChange: pickFile
   })), /*#__PURE__*/React.createElement("div", {
     className: "field"
+  }, /*#__PURE__*/React.createElement("label", null, "Service ID"), /*#__PURE__*/React.createElement("input", {
+    value: f.id,
+    onChange: e => set("id", sanitizeServiceId(e.target.value)),
+    placeholder: "porttracker, home-assistant, uptime-kuma, paperless",
+    autoFocus: true
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "help"
+  }, "Unique internal identifier used to match status data. Use lowercase letters, numbers, and hyphens. Examples: porttracker, home-assistant, uptime-kuma, paperless.")), /*#__PURE__*/React.createElement("div", {
+    className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "name"), /*#__PURE__*/React.createElement("input", {
     value: f.name,
     onChange: e => set("name", e.target.value),
-    placeholder: "Jellyfin",
-    autoFocus: true
+    placeholder: "Jellyfin"
   })), /*#__PURE__*/React.createElement("div", {
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Launch URL"), /*#__PURE__*/React.createElement("input", {
@@ -2198,7 +2211,7 @@ function EditModal({
     style: {
       opacity: valid && !saving ? 1 : 0.4
     }
-  }, saving ? "saving..." : isEdit ? "save" : "create"))));
+  }, saving ? "saving..." : isEdit ? "save" : "create")))));
 }
 function AuthModal({
   reason,
