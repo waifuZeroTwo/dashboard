@@ -2032,6 +2032,7 @@ const BLANK = {
 };
 function EditModal({
   initial,
+  originalId,
   categories,
   onSave,
   onClose
@@ -2068,6 +2069,7 @@ function EditModal({
     setSaving(true);
     const res = await onSave({
       ...f,
+      originalId,
       id: typeof f.id === "string" ? f.id.trim() : f.id,
       name: f.name.trim(),
       category: (f.category || "OTHER").trim().toUpperCase(),
@@ -4090,14 +4092,17 @@ function App() {
     return true;
   };
   const upsert = async svc => {
+    const originalId = svc.originalId;
     const id = svc.id || "svc_" + Date.now().toString(36);
-    const existing = svcsRef.current.find(s => s.id === id);
+    const replaceId = originalId || id;
+    const existing = svcsRef.current.find(s => s.id === replaceId);
     const nextSvc = stableServiceFields({
       ...(existing || BLANK),
       ...svc,
       id
     });
-    const nextServices = existing ? svcsRef.current.map(s => s.id === nextSvc.id ? nextSvc : s) : [...svcsRef.current, nextSvc];
+    delete nextSvc.originalId;
+    const nextServices = existing ? svcsRef.current.map(s => s.id === replaceId ? nextSvc : s) : [...svcsRef.current, nextSvc];
     const res = await saveServices(nextServices);
     if (!res.ok) return {
       ok: false,
@@ -4267,7 +4272,8 @@ function App() {
       newTab: newTab,
       unlocked: unlocked,
       onEdit: svc => setModal({
-        svc
+        svc,
+        originalId: svc.id
       }),
       onDelete: del,
       onIcon: setIcon
@@ -4317,6 +4323,7 @@ function App() {
     onClick: () => requireAuth("reset", resetAll)
   }, "reset"))), modal && /*#__PURE__*/React.createElement(EditModal, {
     initial: modal.svc || null,
+    originalId: modal.originalId,
     categories: categories,
     onSave: upsert,
     onClose: () => setModal(null),
@@ -4332,7 +4339,8 @@ function App() {
       new: true
     }),
     onEdit: s => setModal({
-      svc: s
+      svc: s,
+      originalId: s.id
     }),
     onDelete: del,
     onLock: lock,
