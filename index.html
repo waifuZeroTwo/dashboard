@@ -489,6 +489,41 @@ body {
   cursor: pointer;
 }
 .statuspick button.sel { color: var(--green-hi); border-color: var(--line-2); box-shadow: var(--glow-soft); }
+.enabled-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  min-width: 130px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.enabled-toggle.on { color: var(--green-hi); border-color: var(--line-2); box-shadow: var(--glow-soft); }
+.enabled-toggle .switch {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.04);
+}
+.enabled-toggle .switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  background: var(--muted);
+  transition: transform 0.15s, background 0.15s;
+}
+.enabled-toggle.on .switch::after { transform: translateX(16px); background: var(--green-hi); }
 
 .modal.auth { width: min(440px, 100%); }
 .auth-note { color: var(--muted); font-size: 13px; line-height: 1.6; }
@@ -1989,6 +2024,7 @@ const BLANK = {
   url: "",
   checkUrl: "",
   statusMode: "auto",
+  enabled: true,
   icon: "",
   subtitle: "",
   availability: "",
@@ -2038,6 +2074,7 @@ function EditModal({
       url,
       checkUrl,
       statusMode: typeof f.statusMode === "string" && f.statusMode.trim() ? f.statusMode.trim() : "auto",
+      enabled: !!f.enabled,
       icon: typeof f.icon === "string" ? f.icon : "",
       subtitle: typeof f.subtitle === "string" ? f.subtitle : "",
       availability: typeof f.availability === "string" ? f.availability : "",
@@ -2135,13 +2172,16 @@ function EditModal({
     value: c
   })))), /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "status indicator"), /*#__PURE__*/React.createElement("div", {
-    className: "statuspick"
-  }, [["auto", "auto-ping"], ["up", "force up"], ["down", "force down"], ["off", "hide"]].map(([v, lbl]) => /*#__PURE__*/React.createElement("button", {
-    key: v,
-    className: f.statusMode === v ? "sel" : "",
-    onClick: () => set("statusMode", v)
-  }, lbl))))), err ? /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("label", null, "Enabled"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "enabled-toggle" + (f.enabled ? " on" : ""),
+    onClick: () => set("enabled", !f.enabled),
+    "aria-pressed": !!f.enabled
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "switch"
+  }), /*#__PURE__*/React.createElement("span", null, f.enabled ? "enabled" : "disabled")), /*#__PURE__*/React.createElement("div", {
+    className: "help"
+  }, "Controls whether the backend includes and checks this service.")), err ? /*#__PURE__*/React.createElement("div", {
     className: "auth-err",
     role: "alert"
   }, "✕ ", err) : null, /*#__PURE__*/React.createElement("div", {
@@ -3667,7 +3707,7 @@ function normalizeService(entry) {
     icon: typeof entry.icon === "string" ? entry.icon : "",
     subtitle: typeof entry.subtitle === "string" ? entry.subtitle : "",
     availability: typeof entry.availability === "string" ? entry.availability : "",
-    enabled: typeof entry.enabled === "boolean" ? entry.enabled : entry.enabled,
+    enabled: typeof entry.enabled === "boolean" ? entry.enabled : entry.statusMode === "off" ? false : true,
     sortOrder: entry.sortOrder
   };
   Object.keys(svc).forEach(key => svc[key] === undefined && delete svc[key]);
@@ -3707,7 +3747,7 @@ function stableServiceFields(svc) {
     icon: typeof (svc && svc.icon) === "string" ? svc.icon : "",
     subtitle: typeof (svc && svc.subtitle) === "string" ? svc.subtitle : "",
     availability: typeof (svc && svc.availability) === "string" ? svc.availability : "",
-    enabled: typeof (svc && svc.enabled) === "boolean" ? svc.enabled : svc && svc.enabled,
+    enabled: typeof (svc && svc.enabled) === "boolean" ? svc.enabled : svc && svc.statusMode === "off" ? false : true,
     sortOrder: svc && svc.sortOrder
   };
   Object.keys(stable).forEach(key => stable[key] === undefined && delete stable[key]);
@@ -4057,7 +4097,7 @@ function App() {
           category: service.category,
           url: service.url,
           checkUrl: service.checkUrl,
-          enabled: service.enabled
+          enabled: !!service.enabled
         })
       });
       bodyText = await response.text();
