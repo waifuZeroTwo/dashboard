@@ -3642,6 +3642,7 @@ function normalizeService(entry) {
     icon: typeof entry.icon === "string" ? entry.icon : "",
     subtitle: typeof entry.subtitle === "string" ? entry.subtitle : "",
     availability: typeof entry.availability === "string" ? entry.availability : "",
+    enabled: typeof entry.enabled === "boolean" ? entry.enabled : entry.enabled,
     sortOrder: entry.sortOrder
   };
   Object.keys(svc).forEach(key => svc[key] === undefined && delete svc[key]);
@@ -3681,6 +3682,7 @@ function stableServiceFields(svc) {
     icon: typeof (svc && svc.icon) === "string" ? svc.icon : "",
     subtitle: typeof (svc && svc.subtitle) === "string" ? svc.subtitle : "",
     availability: typeof (svc && svc.availability) === "string" ? svc.availability : "",
+    enabled: typeof (svc && svc.enabled) === "boolean" ? svc.enabled : svc && svc.enabled,
     sortOrder: svc && svc.sortOrder
   };
   Object.keys(stable).forEach(key => stable[key] === undefined && delete stable[key]);
@@ -4014,6 +4016,66 @@ function App() {
       };
     }
   };
+  const saveServiceConfig = async service => {
+    let response;
+    let bodyText = "";
+    let payload = null;
+    try {
+      response = await fetch(apiUrl("/admin/services/" + encodeURIComponent(service.id)), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + operatorKeyRef.current
+        },
+        body: JSON.stringify({
+          name: service.name,
+          category: service.category,
+          url: service.url,
+          checkUrl: service.checkUrl,
+          enabled: service.enabled
+        })
+      });
+      bodyText = await response.text();
+      if (bodyText) {
+        try {
+          payload = JSON.parse(bodyText);
+        } catch (e) {
+          payload = bodyText;
+        }
+      }
+      if (!response.ok || !payload || payload.ok !== true || !payload.service) {
+        console.error("service save failed", {
+          status: response.status,
+          body: payload || bodyText
+        });
+        return {
+          ok: false
+        };
+      }
+      const serviceConfig = normalizeService(payload.service);
+      if (!serviceConfig) {
+        console.error("service save failed", {
+          status: response.status,
+          body: payload || bodyText
+        });
+        return {
+          ok: false
+        };
+      }
+      return {
+        ok: true,
+        service: serviceConfig
+      };
+    } catch (err) {
+      console.error("service save failed", {
+        status: response && response.status,
+        body: payload || bodyText || err
+      });
+      return {
+        ok: false
+      };
+    }
+  };
   const commitServices = async nextServices => {
     const res = await saveServices(nextServices);
     if (!res.ok) return false;
@@ -4030,13 +4092,18 @@ function App() {
       ...svc,
       id
     });
-    const exists = !!existing;
-    const nextServices = exists ? svcsRef.current.map(s => s.id === nextSvc.id ? nextSvc : s) : [...svcsRef.current, nextSvc];
-    const ok = await commitServices(nextServices);
-    if (!ok) return {
+    const res = await saveServiceConfig(nextSvc);
+    if (!res.ok) return {
       ok: false,
       error: "save_failed"
     };
+    const savedSvc = stableServiceFields({
+      ...(existing || BLANK),
+      ...res.service
+    });
+    const nextServices = existing ? svcsRef.current.map(s => s.id === savedSvc.id ? savedSvc : s) : [...svcsRef.current, savedSvc];
+    setSvcs(nextServices);
+    save(nextServices);
     setModal(null);
     return {
       ok: true
